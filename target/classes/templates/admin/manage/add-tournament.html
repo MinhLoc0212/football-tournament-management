@@ -1,0 +1,37 @@
+<div class="modal-content">
+    <div class="modal-header">
+        <h2 class="modal-title">Thêm giải đấu</h2>
+        <button class="btn-close-box" onclick="closeModal()">x</button>
+    </div>
+
+    <form id="addTournamentForm" class="tournament-form">
+        <div class="form-group">
+            <label for="tournamentName">Tên giải đấu:</label>
+            <input type="text" id="tournamentName" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="organizer">Ban tổ chức:</label>
+            <input type="text" id="organizer" name="organizer" required>
+        </div>
+
+        <div class="form-group">
+            <label for="mode">Chế độ:</label>
+            <input type="text" id="mode" name="mode">
+        </div>
+
+        <div class="form-group">
+            <label for="teams">Số đội:</label>
+            <input type="text" id="teams" name="teams">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Mô tả:</label>
+            <textarea id="description" name="description" rows="6"></textarea>
+        </div>
+
+        <div class="form-actions-center">
+            <button type="submit" class="btn-save-figma">Lưu</button>
+        </div>
+    </form>
+</div>
