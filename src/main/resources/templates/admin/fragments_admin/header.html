@@ -1,0 +1,33 @@
+<header class="topbar" th:fragment="header">
+    <button class="topbar__menuBtn" type="button" aria-label="Menu">
+        <img src="/assets/general-overview/menu.svg" alt="">
+    </button>
+
+    <div class="search" role="search">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M16.3 16.3 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input type="text" th:placeholder="${searchPlaceholder ?: 'Tìm kiếm'}" aria-label="Tìm kiếm">
+    </div>
+
+    <div class="topbar__right">
+        <div class="pill">Tin nhắn</div>
+        <button class="iconBtn" type="button" aria-label="Tin nhắn">
+            <img src="/assets/general-overview/top-mail.png" alt="">
+        </button>
+
+        <div class="pill">Thông báo</div>
+        <button class="iconBtn" type="button" aria-label="Thông báo">
+            <img src="/assets/general-overview/top-notification.png" alt="">
+        </button>
+
+        <div class="profile" aria-label="Người dùng">
+            <div class="profile__avatar">
+                <img src="/assets/general-overview/top-avatar.png" alt="">
+            </div>
+            <div class="profile__name">Quang Minh</div>
+            <img class="profile__dropdown" src="/assets/general-overview/top-dropdown.png" alt="">
+        </div>
+    </div>
+</header>
