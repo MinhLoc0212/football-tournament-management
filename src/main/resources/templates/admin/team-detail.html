@@ -522,108 +522,11 @@
     </style>
 </head>
 <body>
-<div class="app">
-    <!-- Sidebar from general-overview -->
-    <aside class="sidebar">
-        <div class="sidebar__brand">
-            <div class="sidebar__brandIcon">
-                <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M4 12.5l4.5 4.5L20 5.5" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div>
-                <div class="sidebar__brandTitle">Admin Space</div>
-                <div class="muted" style="font-size: 13px; margin-top: 2px;">Bảng điều khiển</div>
-            </div>
-        </div>
-
-        <nav class="nav">
-            <a class="nav__item nav__item--large" href="/admin/general-overview" th:href="@{/admin/general-overview}">
-                <span class="nav__icon nav__icon--large">
-                    <img src="../../static/assets/general-overview/nav-dashboard.png" th:src="@{/assets/general-overview/nav-dashboard.png}" alt="">
-                </span>
-                <span class="nav__label nav__label--large">Bảng điều khiển</span>
-            </a>
-            <a class="nav__item nav__item--large" href="#">
-                <span class="nav__icon nav__icon--large">
-                    <img src="../../static/assets/general-overview/nav-profile.png" th:src="@{/assets/general-overview/nav-profile.png}" alt="">
-                </span>
-                <span class="nav__label nav__label--large">Hồ sơ của tôi</span>
-            </a>
-            <a class="nav__item nav__item--large nav__item--active" href="#">
-                <span class="nav__icon nav__icon--large">
-                    <img src="../../static/assets/general-overview/tournament.jpg" th:src="@{/assets/general-overview/tournament.jpg}" alt="">
-                </span>
-                <span class="nav__label nav__label--large">Quản lý</span>
-                <img class="nav__chevron" src="../../static/assets/general-overview/sidebar-arrow.png" th:src="@{/assets/general-overview/sidebar-arrow.png}" alt="">
-            </a>
-        </nav>
-
-        <nav class="nav">
-            <a class="nav__item" href="#">
-                <span class="nav__label">Giải đấu</span>
-            </a>
-            <a class="nav__item" href="#">
-                <span class="nav__label">Người dùng</span>
-            </a>
-            <a class="nav__item nav__item--active" href="/admin/team-management" th:href="@{/admin/team-management}">
-                <span class="nav__label">Đội tuyển</span>
-            </a>
-        </nav>
-
-        <a class="nav__item nav__item--large" href="#">
-            <span class="nav__icon nav__icon--large">
-                <img src="../../static/assets/general-overview/sidebar-stats.png" th:src="@{/assets/general-overview/sidebar-stats.png}" alt="">
-            </span>
-            <span class="nav__label nav__label--large">Thống kê</span>
-            <img class="nav__chevron" src="../../static/assets/general-overview/sidebar-arrow.png" th:src="@{/assets/general-overview/sidebar-arrow.png}" alt="">
-        </a>
-
-        <div class="sidebar__footer">
-            <a class="nav__item nav__item--large" href="#">
-                <span class="nav__icon nav__icon--large">
-                    <img src="../../static/assets/general-overview/sidebar-logout.png" th:src="@{/assets/general-overview/sidebar-logout.png}" alt="">
-                </span>
-                <span class="nav__label nav__label--large">Đăng xuất</span>
-            </a>
-        </div>
-    </aside>
+<div class="app" th:with="activePage='manage', activeSubPage='team'">
+    <aside th:replace="~{admin/fragments_admin/sidebar :: sidebar}"></aside>
 
     <main class="content">
-        <!-- Topbar from general-overview -->
-        <header class="topbar">
-            <button class="topbar__menuBtn" type="button">
-                <img src="../../static/assets/general-overview/menu.svg" th:src="@{/assets/general-overview/menu.svg}" alt="">
-            </button>
-
-            <div class="search">
-                <svg viewBox="0 0 24 24" fill="none">
-                    <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2"/>
-                    <path d="M16.3 16.3 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                <input type="text" placeholder="Tìm kiếm">
-            </div>
-
-            <div class="topbar__right">
-                <div class="pill">Tin nhắn</div>
-                <button class="iconBtn">
-                    <img src="../../static/assets/general-overview/top-mail.png" th:src="@{/assets/general-overview/top-mail.png}" alt="">
-                </button>
-
-                <div class="pill">Thông báo</div>
-                <button class="iconBtn">
-                    <img src="../../static/assets/general-overview/top-notification.png" th:src="@{/assets/general-overview/top-notification.png}" alt="">
-                </button>
-
-                <div class="profile">
-                    <div class="profile__avatar">
-                        <img src="../../static/assets/general-overview/top-avatar.png" th:src="@{/assets/general-overview/top-avatar.png}" alt="">
-                    </div>
-                    <div class="profile__name">Quang Minh</div>
-                    <img class="profile__dropdown" src="../../static/assets/general-overview/top-dropdown.png" th:src="@{/assets/general-overview/top-dropdown.png}" alt="">
-                </div>
-            </div>
-        </header>
+        <header th:replace="~{admin/fragments_admin/header :: header}"></header>
 
         <!-- Main Content: Team Detail -->
         <div class="main-layout">
@@ -768,6 +671,7 @@
             </div>
         </div>
     </main>
+    <footer th:replace="~{admin/fragments_admin/footer :: footer}"></footer>
 </div>
 </body>
 </html>
