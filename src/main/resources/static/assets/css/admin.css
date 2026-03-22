@@ -391,6 +391,11 @@ img {
   color: var(--text);
 }
 
+.btn--dark {
+  background: #333;
+  color: #fff;
+}
+
 .btn--blue-dark {
   background-color: #1a0dab;
   color: #fff;
@@ -498,6 +503,11 @@ img {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+}
+
+.tournament__back {
+  background: #333;
+  color: #fff;
 }
 
 .tournament__title {

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/admin.css">
+    <link rel="stylesheet" th:href="@{/assets/css/admin.css?v=20260322_1}">
     <style>
 
         :root {
@@ -503,91 +503,125 @@
             border-radius: 8px;
         }
 
-        .info-list {
-            display: grid;
-            gap: 20px;
-            margin-top: 20px;
+    /* Sub-tabs styles */
+        .sub-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .info-item {
-            display: grid;
-            grid-template-columns: 150px 1fr;
-            align-items: center;
+        .btn-sub-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
         }
 
-        .info-label {
+        .btn-sub-tab--outline {
+            background: transparent;
+            color: var(--brand);
+            border: 1px solid var(--brand);
+        }
+
+        .btn-sub-tab--active {
+            background: var(--brand);
+            color: #fff;
+        }
+
+        /* Status & Action Buttons */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .badge--success { background-color: #28a745; } /* Màu xanh hoàn thành */
+
+        .btn--warning {
+            background-color: #ffc107;
+            color: #212529;
+            border: 1px solid #e0a800;
             font-weight: 700;
-            font-size: 16px;
-            color: #111827;
         }
 
-        .info-value {
-            font-size: 16px;
-            color: #4b5563;
+        .match-time {
+            font-size: 13px;
+            line-height: 1.2;
         }
 
 
     </style>
 </head>
 <body>
-<div class="app" th:with="activePage='manage', activeSubPage='tournament', activeTab='info'">
+<div class="app" th:with="activePage='manage', activeSubPage='tournament', activeTab='matches'">
     <aside th:replace="~{admin/fragments_admin/sidebar :: sidebar}"></aside>
 
     <main class="content">
         <header th:replace="~{admin/fragments_admin/header :: header}"></header>
 
         <div class="tournament-details" style="background-color: #e6ecec;">
-            <div class="tournament__header">
-                <h1 class="tournament__title" th:text="'CHI TIẾT GIẢI ĐẤU: ' + ${tournamentName}">CHI TIẾT GIẢI ĐẤU: Hutech mở rộng lần 31</h1>
+            <th:block
+              th:replace="~{admin/tournament/fragments/tournament-header-tabs :: headerTabs(${activeTab}, ${tournamentName})}"
+            ></th:block>
+
+            <div class="sub-tabs">
+                <button class="btn-sub-tab btn-sub-tab--outline">Vòng bảng</button>
+                <button class="btn-sub-tab btn-sub-tab--active">Vòng trong</button>
             </div>
 
+            <table class="table" style="background: transparent; border: none;">
+                <thead>
+                <tr style="background: transparent;">
+                    <th style="background: transparent;">Vòng</th>
+                    <th style="background: transparent;">Ngày/giờ</th>
+                    <th style="background: transparent;">Đội 1</th>
+                    <th style="background: transparent; text-align: center;">Tỉ số</th>
+                    <th style="background: transparent;">Đội 2</th>
+                    <th style="background: transparent;">Trạng thái</th>
+                    <th style="background: transparent; text-align: center;">Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="match : ${matches}">
+                    <td class="muted">Bán Kết</td>
+                    <td>
+                        <div class="match-time">
+                            <div>Bán Kết - Trận 1</div>
+                            <div class="muted">20:00</div>
+                        </div>
+                    </td>
+                    <td>FC Test 196267</td>
+                    <td style="text-align: center; font-weight: 700;">3 : 1</td>
+                    <td>FC Test 196093</td>
+                    <td><span class="badge badge--success">Hoàn thành</span></td>
+                    <td style="text-align: center;">
+                        <button class="btn btn--warning btn--sm">Cập nhật</button>
+                    </td>
+                </tr>
 
-            <div class="tabs">
-                <a th:href="@{/admin/general-information}"
-                   class="tab-link"
-                   th:classappend="${activeTab == 'info' ? 'active' : ''}">
-                    Thông tin chung
-                </a>
-
-                <a th:href="@{/admin/team-list}"
-                   class="tab-link"
-                   th:classappend="${activeTab == 'teams' ? 'active' : ''}">
-                    Danh sách đội
-                </a>
-
-                <a th:href="@{/admin/match-history}"
-                   class="tab-link"
-                   th:classappend="${activeTab == 'matches' ? 'active' : ''}">
-                    Lịch thi đấu
-                </a>
-
-                <a th:href="@{/admin/tournament-bracket}" class="tab-link">
-                    Sơ đồ thi đấu
-                </a>
-            </div>
-
-            <div class="info-list">
-                <div class="info-item">
-                    <div class="info-label">Ban tổ chức:</div>
-                    <div class="info-value" th:text="${organizerName} ?: 'Nguyễn Nhật Hào'">Nguyễn Nhật Hào</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Chế độ:</div>
-                    <div class="info-value" th:text="${mode} ?: 'Knockout'">Knockout</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Đội:</div>
-                    <div class="info-value" th:text="${teamFormat} ?: '4 v 4'">4 v 4</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Trạng thái:</div>
-                    <div class="info-value" th:text="${status} ?: 'Hoàn thành'">Hoàn thành</div>
-                </div>
-                <div class="info-item" style="align-items: flex-start;">
-                    <div class="info-label">Mô tả:</div>
-                    <div class="info-value" th:text="${description} ?: 'aaaaaaaaaaa'">aaaaaaaaaaa</div>
-                </div>
-            </div>
+                <tr>
+                    <td class="muted">Chung Kết</td>
+                    <td>
+                        <div class="match-time">
+                            <div>Chung Kết - Trận 1</div>
+                            <div class="muted">20:00</div>
+                        </div>
+                    </td>
+                    <td>FC Test 196267</td>
+                    <td style="text-align: center; font-weight: 700;">1 : 4</td>
+                    <td>22DTHC3</td>
+                    <td><span class="badge badge--success">Hoàn thành</span></td>
+                    <td style="text-align: center;">
+                        <button class="btn btn--warning btn--sm">Cập nhật</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
 
         <div class="footer-copyright" th:replace="~{admin/fragments_admin/footer :: footer}"></div>
