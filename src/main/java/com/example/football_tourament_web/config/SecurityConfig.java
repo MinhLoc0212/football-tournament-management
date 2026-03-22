@@ -52,6 +52,8 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationSuccessHandler successHandler)
 			throws Exception {
+		http.csrf(csrf -> csrf.ignoringRequestMatchers("/thanh-toan/momo/**", "/order/momo-*"));
+
 		http.authorizeHttpRequests(auth -> auth
 				.requestMatchers(
 						"/assets/**",
@@ -69,7 +71,9 @@ public class SecurityConfig {
 						"/dang-nhap.html",
 						"/dang-ky",
 						"/dang-ky.html",
-						"/api/geocode"
+						"/api/geocode",
+						"/thanh-toan/momo/**",
+						"/order/momo-*"
 				).permitAll()
 				.requestMatchers("/admin/**").hasRole("ADMIN")
 				.requestMatchers(
