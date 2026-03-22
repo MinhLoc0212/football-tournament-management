@@ -1,5 +1,5 @@
 .teams-section {
-    padding: 18px 0 0;
+    padding: 14px 0 0;
 }
 
 .teams-toolbar {
@@ -11,21 +11,22 @@
 }
 
 .teams-title {
-    font-size: 22px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 900;
     margin: 0;
 }
 
 .teams-count {
     font-size: 14px;
-    color: #6c6c6c;
+    color: rgba(0, 0, 0, 0.62);
     margin-top: 4px;
+    font-weight: 800;
 }
 
 .search-box-teams {
     width: 280px;
-    border: 1px solid #dfdfdf;
-    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 14px;
     background: #fff;
     padding: 10px 12px;
     font-size: 14px;
@@ -33,21 +34,26 @@
     outline: none;
 }
 
+.search-box-teams:focus {
+    border-color: rgba(255, 170, 23, 0.85);
+    box-shadow: 0 0 0 4px rgba(255, 170, 23, 0.25);
+}
+
 .team-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    gap: 14px;
     padding-bottom: 20px;
 }
 
 .team-card {
-    border: 1px solid #e8e8e8;
-    border-radius: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
     background: #fff;
     overflow: hidden;
     display: grid;
     gap: 0;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -58,7 +64,8 @@
 
 .team-card__cover {
     height: 86px;
-    background: linear-gradient(135deg, #f7cf5a, #e8b931);
+    background: radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.35), transparent 50%),
+        linear-gradient(135deg, rgba(255, 170, 23, 1), rgba(0, 0, 0, 0.86));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -114,27 +121,27 @@
 .member-chip {
     padding: 4px 12px;
     border-radius: 999px;
-    background: #f6f6f6;
-    color: #555;
+    background: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.7);
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 900;
 }
 
 .detail-btn {
-    border: 1px solid #000;
-    border-radius: 8px;
-    background: #e8b931;
-    color: #111;
+    border: 1px solid rgba(0, 0, 0, 0.92);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.92);
+    color: #fff;
     font-size: 13px;
-    font-weight: 600;
-    padding: 8px 14px;
+    font-weight: 900;
+    padding: 10px 14px;
     white-space: nowrap;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .detail-btn:hover {
-    background: #d4a72a;
+    background: #000;
 }
 
 .team-modal {
@@ -162,7 +169,7 @@
 }
 
 .team-modal__top {
-    background: #e8b931;
+    background: var(--brand);
     color: #ffffff;
     display: flex;
     align-items: center;

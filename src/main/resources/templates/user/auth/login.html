@@ -26,15 +26,24 @@
       <section class="auth-page">
         <div class="container auth-grid">
           <section class="profile-card auth-side" aria-label="Giới thiệu">
-            <h2>SPORT TOURNAMENT</h2>
+            <div class="auth-side__kicker">SPORT TOURNAMENT</div>
+            <h2>Chào mừng trở lại</h2>
             <p class="lead">
               Đăng nhập để quản lý đội, theo dõi lịch sử đăng ký, lịch sử giao dịch và thực hiện thanh toán.
             </p>
+            <div class="auth-perks" aria-label="Lợi ích">
+              <div class="auth-perk">Quản lý đội hình & thành viên</div>
+              <div class="auth-perk">Theo dõi lịch đấu & kết quả</div>
+              <div class="auth-perk">Xem thống kê & phân tích</div>
+            </div>
             <div class="auth-info" aria-label="Hỗ trợ">
               <img src="/assets/figma/icon-mail.svg" alt="" />
               <div>sporttournament@example.com</div>
               <img src="/assets/figma/icon-phone.svg" alt="" />
               <div>0123456789</div>
+            </div>
+            <div class="auth-side__media" aria-hidden="true">
+              <img th:src="@{/assets/figma/home-hero.png}" alt="" />
             </div>
           </section>
 

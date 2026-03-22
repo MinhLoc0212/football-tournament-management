@@ -23,43 +23,76 @@
         </div>
       </section>
 
-      <section class="about">
+      <section class="home-section">
         <div class="container">
-          <div class="about-grid">
+          <div class="home-about">
             <div>
-              <h2>NỀN TẢNG TỔ CHỨC GIẢI ĐẤU BÓNG ĐÁ TRỰC TUYẾN</h2>
-              <p>
-                Website cung cấp thông tin và nội dung liên quan đến các hoạt động thể thao, giải đấu và sự kiện.
-                Giao diện được thiết kế hiện đại, đơn giản và thân thiện, giúp người dùng dễ dàng theo dõi và tiếp
-                cận các thông tin thể thao cần thiết.
+              <h2 class="home-section__title">Nền tảng tổ chức giải đấu bóng đá trực tuyến</h2>
+              <p class="home-section__desc">
+                SPORT TOURNAMENT giúp bạn quản lý đội hình, đăng ký giải đấu và theo dõi lịch đấu/kết quả một cách
+                trực quan. Trải nghiệm được tối ưu để thao tác nhanh, rõ ràng và thân thiện trên nhiều thiết bị.
               </p>
-              <p>
-                Nền tảng được xây dựng nhằm giới thiệu và cập nhật thông tin về các hoạt động thể thao và giải đấu.
-                Người dùng có thể theo dõi tin tức, lịch trình và các nội dung liên quan đến thể thao trong một giao
-                diện trực quan và dễ sử dụng.
-              </p>
+              <div class="home-hero__actions">
+                <a class="home-btn home-btn--primary" th:href="@{/dang-ky}">Tạo tài khoản</a>
+                <a class="home-btn home-btn--ghost" th:href="@{/user/tournament}">Xem giải đấu</a>
+              </div>
             </div>
-            <div class="about-hero" aria-hidden="true">
-              <img src="/assets/figma/home-hero.png" alt="" />
+            <div class="home-about__media" aria-hidden="true">
+              <img th:src="@{/assets/figma/home-hero.png}" alt="" />
             </div>
           </div>
+        </div>
+      </section>
 
-          <div class="features">
-            <h3>Điểm nổi bật</h3>
-            <div class="feature-grid">
-              <div class="feature">
-                <h4 class="title">Tin tức & sự kiện</h4>
-                <p class="desc">Tổng hợp thông tin mới nhất về thể thao, giải đấu, và hoạt động cộng đồng.</p>
+      <section class="home-section home-section--alt" aria-label="Điểm nổi bật">
+        <div class="container">
+          <div class="home-section__head">
+            <h2 class="home-section__title">Điểm nổi bật</h2>
+            <p class="home-section__desc">Những giá trị cốt lõi giúp trải nghiệm tổ chức và tham gia giải đấu chuyên nghiệp hơn.</p>
+          </div>
+
+          <div class="home-cardGrid">
+            <article class="home-card">
+              <div class="home-card__icon">
+                <img th:src="@{/assets/figma/icon-mail.svg}" alt="" />
               </div>
-              <div class="feature">
-                <h4 class="title">Trải nghiệm đơn giản</h4>
-                <p class="desc">Giao diện trực quan, thân thiện, dễ theo dõi và dễ sử dụng trên nhiều thiết bị.</p>
+              <h3 class="home-card__title">Thông tin rõ ràng</h3>
+              <p class="home-card__desc">Tổng hợp dữ liệu giải đấu, lịch đấu, kết quả và tin tức trong một nơi.</p>
+            </article>
+            <article class="home-card">
+              <div class="home-card__icon">
+                <img th:src="@{/assets/figma/icon-phone.svg}" alt="" />
               </div>
-              <div class="feature">
-                <h4 class="title">Kết nối cộng đồng</h4>
-                <p class="desc">Tạo cầu nối giữa những người yêu thể thao thông qua nội dung và cập nhật liên tục.</p>
+              <h3 class="home-card__title">Thao tác nhanh</h3>
+              <p class="home-card__desc">Tạo đội hình, cập nhật cầu thủ và đăng ký giải chỉ với vài bước.</p>
+            </article>
+            <article class="home-card">
+              <div class="home-card__icon">
+                <img th:src="@{/assets/figma/icon-map-pin.svg}" alt="" />
               </div>
-            </div>
+              <h3 class="home-card__title">Kết nối cộng đồng</h3>
+              <p class="home-card__desc">Gắn kết các đội bóng thông qua giải đấu và hoạt động thể thao phong trào.</p>
+            </article>
+            <article class="home-card">
+              <div class="home-card__icon">
+                <img th:src="@{/assets/figma/icon-phone.svg}" alt="" />
+              </div>
+              <h3 class="home-card__title">Theo dõi hiệu suất</h3>
+              <p class="home-card__desc">Xem thống kê và phân tích để cải thiện phong độ theo từng mùa giải.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="home-cta" aria-label="Kêu gọi hành động">
+        <div class="container home-cta__inner">
+          <div>
+            <h2 class="home-cta__title">Bắt đầu tham gia giải đấu ngay hôm nay</h2>
+            <p class="home-cta__desc">Tạo tài khoản, tạo đội hình và chọn giải đấu phù hợp với bạn.</p>
+          </div>
+          <div class="home-cta__actions">
+            <a class="home-btn home-btn--primary" th:href="@{/dang-ky}">Bắt đầu ngay</a>
+            <a class="home-btn home-btn--ghost" th:href="@{/lien-he}">Liên hệ</a>
           </div>
         </div>
       </section>
