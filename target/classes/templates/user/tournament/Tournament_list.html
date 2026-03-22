@@ -12,36 +12,61 @@
         <link rel="stylesheet" th:href="@{/assets/css/tournament-list.css}">
 
 </head>
-<body>
+<body class="tournament-page">
 
 <th:block th:replace="~{user/fragments/header :: header('tournament')}"></th:block>
 
 <main>
-    <section class="hero">
+    <section class="banner">
         <div class="container">
-            <h1 class="hero__title">GIẢI ĐẤU BÓNG ĐÁ</h1>
-            <p class="hero__crumb">Home / FOOTBALL</p>
+            <h1>GIẢI ĐẤU BÓNG ĐÁ</h1>
+            <p class="crumb">Home / Tournament</p>
         </div>
     </section>
 
-    <section class="section">
+    <section class="home-section">
         <div class="container">
-            <h2 class="section__title">DANH SÁCH GIẢI ĐẤU</h2>
-            <div class="tournament-grid">
-                <article class="tournament-card" th:each="t : ${tournaments}">
-                    <div class="tournament-card__cover" th:style="'background-image: url(' + (${t.imageUrl != null} ? ${t.imageUrl} : '/assets/general-overview/tournament.jpg') + '); background-size: cover; background-position: center;'"></div>
-                    <div class="tournament-card__content">
-                        <h3 class="tournament-card__title" th:text="${t.name}">HUTECH mở rộng lần 1</h3>
-                        <p class="tournament-card__meta" th:text="'BTC: ' + ${t.organizer}">BTC: Đỗ Thành Nhân</p>
-                        <p class="tournament-card__meta" th:text="'Hình thức: ' + (${t.mode == T(com.example.football_tourament_web.model.enums.TournamentMode).GROUP_STAGE} ? 'Chia bảng đấu (Group Stage)' : 'Knockout')">Hình thức: Knockout</p>
-                        <p class="tournament-card__meta" th:text="'Số đội: ' + ${t.teamLimit}">Số đội: 4</p>
-                        <div class="card-bottom">
-                            <span class="status" th:classappend="'status--' + ${#strings.toLowerCase(t.status)}" th:text="${t.status == T(com.example.football_tourament_web.model.enums.TournamentStatus).UPCOMING ? 'Sắp diễn ra' : (t.status == T(com.example.football_tourament_web.model.enums.TournamentStatus).LIVE ? 'Đang đá' : 'Đã kết thúc')}">Đang đá</span>
-                            <a th:href="@{/user/tournament/match-schedule(id=${t.id})}" class="detail-btn">Xem chi tiết <span>→</span></a>
-                        </div>
-                    </div>
-                </article>
+            <div class="home-section__head">
+                <h2 class="home-section__title">Danh sách giải đấu</h2>
+                <p class="home-section__desc">Khám phá giải đấu đang mở đăng ký, đang diễn ra và đã kết thúc.</p>
             </div>
+
+            <div class="tournament-list__grid" th:if="${tournaments != null and !#lists.isEmpty(tournaments)}">
+                <a class="tournament-list__card" th:each="t : ${tournaments}" th:href="@{/user/tournament/match-schedule(id=${t.id})}">
+                    <div class="tournament-list__media" aria-hidden="true">
+                        <img th:if="${t.imageUrl != null and !#strings.isEmpty(t.imageUrl)}" th:src="${t.imageUrl}" alt="" />
+                        <img th:unless="${t.imageUrl != null and !#strings.isEmpty(t.imageUrl)}" th:src="@{/assets/general-overview/tournament.jpg}" alt="" />
+                    </div>
+                    <div class="tournament-list__body">
+                        <div class="tournament-list__top">
+                            <div class="tournament-list__title" th:text="${t.name}">Giải đấu</div>
+                            <span class="badge badge--upcoming" th:if="${t.status != null and t.status.name() == 'UPCOMING'}">Sắp diễn ra</span>
+                            <span class="badge badge--live" th:if="${t.status != null and t.status.name() == 'LIVE'}">Đang diễn ra</span>
+                            <span class="badge badge--finished" th:if="${t.status != null and t.status.name() == 'FINISHED'}">Đã kết thúc</span>
+                            <span class="badge badge--joined" th:if="${t.status == null}">Đang cập nhật</span>
+                        </div>
+
+                        <div class="tournament-list__meta">
+                            <div class="tournament-list__metaRow">
+                                <span class="tournament-list__label">BTC</span>
+                                <span th:text="${t.organizer != null and !#strings.isEmpty(t.organizer) ? t.organizer : '—'}">—</span>
+                            </div>
+                            <div class="tournament-list__metaRow">
+                                <span class="tournament-list__label">Hình thức</span>
+                                <span th:text="${(t.mode != null and t.mode.name() == 'GROUP_STAGE') ? 'Vòng bảng' : 'Knockout'}">—</span>
+                            </div>
+                            <div class="tournament-list__metaRow">
+                                <span class="tournament-list__label">Số đội</span>
+                                <span th:text="${t.teamLimit != null ? t.teamLimit : '—'}">—</span>
+                            </div>
+                        </div>
+
+                        <div class="tournament-list__cta">Xem chi tiết</div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="home-empty" th:if="${tournaments == null or #lists.isEmpty(tournaments)}">Chưa có giải đấu nào.</div>
         </div>
     </section>
 </main>

@@ -29,25 +29,36 @@
         </div>
       </section>
 
-      <section class="contact-page">
+      <section class="home-section">
         <div class="container">
-          <div class="contact-grid">
-            <div class="panel">
-              <h2>Thông tin liên hệ</h2>
-              <div class="info" aria-label="Thông tin liên hệ">
-                <img src="/assets/figma/icon-map-pin.svg" alt="" />
-                <div>TP. Thủ Đức, TP. HCM</div>
-                <img src="/assets/figma/icon-phone.svg" alt="" />
-                <div>0123456789</div>
-                <img src="/assets/figma/icon-mail.svg" alt="" />
-                <div>sporttournament@example.com</div>
-              </div>
-              <div class="map" id="contactMap" aria-label="Bản đồ">Đang tải bản đồ...</div>
-            </div>
+          <div class="home-section__head">
+            <h2 class="home-section__title">Liên hệ</h2>
+            <p class="home-section__desc">Nếu bạn cần hỗ trợ, hãy gửi thông tin và chúng tôi sẽ phản hồi sớm nhất.</p>
+          </div>
 
-            <div class="panel">
-              <h2>Gửi tin nhắn</h2>
-              <form>
+          <div class="contact-page__grid">
+            <section class="contact-card" aria-label="Thông tin liên hệ">
+              <div class="contact-card__title">Thông tin liên hệ</div>
+              <div class="contact-info" aria-label="Thông tin liên hệ">
+                <a class="contact-info__row" href="https://www.google.com/maps/search/?api=1&query=TP.%20Th%E1%BB%A7%20%C4%90%E1%BB%A9c%2C%20TP.%20HCM" target="_blank" rel="noopener">
+                  <span class="contact-info__icon"><img th:src="@{/assets/figma/icon-map-pin.svg}" alt="" /></span>
+                  <span>TP. Thủ Đức, TP. HCM</span>
+                </a>
+                <a class="contact-info__row" href="tel:0123456789">
+                  <span class="contact-info__icon"><img th:src="@{/assets/figma/icon-phone.svg}" alt="" /></span>
+                  <span>0123 456 789</span>
+                </a>
+                <a class="contact-info__row" href="mailto:sporttournament@example.com">
+                  <span class="contact-info__icon"><img th:src="@{/assets/figma/icon-mail.svg}" alt="" /></span>
+                  <span>sporttournament@example.com</span>
+                </a>
+              </div>
+              <div class="contact-map" id="contactMap" aria-label="Bản đồ">Đang tải bản đồ...</div>
+            </section>
+
+            <section class="contact-card" aria-label="Gửi tin nhắn">
+              <div class="contact-card__title">Gửi tin nhắn</div>
+              <form class="contact-form">
                 <div>
                   <label for="name">Họ tên</label>
                   <input id="name" name="name" placeholder="Nhập họ tên" />
@@ -60,11 +71,11 @@
                   <label for="message">Nội dung</label>
                   <textarea id="message" name="message" placeholder="Nhập nội dung"></textarea>
                 </div>
-                <div class="actions">
-                  <button type="button">GỬI</button>
+                <div class="contact-actions">
+                  <button class="home-btn home-btn--primary" type="button">Gửi</button>
                 </div>
               </form>
-            </div>
+            </section>
           </div>
         </div>
       </section>

@@ -35,6 +35,7 @@ import com.example.football_tourament_web.model.dto.NewsItem;
 import com.example.football_tourament_web.model.entity.Match;
 import com.example.football_tourament_web.model.entity.Player;
 import com.example.football_tourament_web.model.entity.Team;
+import com.example.football_tourament_web.model.entity.Tournament;
 import com.example.football_tourament_web.model.entity.Transaction;
 import com.example.football_tourament_web.model.enums.Gender;
 import com.example.football_tourament_web.model.enums.MatchStatus;
@@ -45,6 +46,7 @@ import com.example.football_tourament_web.repository.PlayerRepository;
 import com.example.football_tourament_web.service.CbsSportsNewsService;
 import com.example.football_tourament_web.service.MomoPaymentService;
 import com.example.football_tourament_web.service.TeamService;
+import com.example.football_tourament_web.service.TournamentService;
 import com.example.football_tourament_web.service.TournamentRegistrationService;
 import com.example.football_tourament_web.service.TransactionService;
 import com.example.football_tourament_web.service.UserService;
@@ -70,6 +72,7 @@ public class HomeController {
 	private final UserService userService;
 	private final TransactionService transactionService;
 	private final MomoPaymentService momoPaymentService;
+	private final TournamentService tournamentService;
 	private final TournamentRegistrationService tournamentRegistrationService;
 	private final TeamService teamService;
 	private final MatchRepository matchRepository;
@@ -84,6 +87,7 @@ public class HomeController {
 			UserService userService,
 			TransactionService transactionService,
 			MomoPaymentService momoPaymentService,
+			TournamentService tournamentService,
 			TournamentRegistrationService tournamentRegistrationService,
 			TeamService teamService,
 			MatchRepository matchRepository,
@@ -93,6 +97,7 @@ public class HomeController {
 		this.userService = userService;
 		this.transactionService = transactionService;
 		this.momoPaymentService = momoPaymentService;
+		this.tournamentService = tournamentService;
 		this.tournamentRegistrationService = tournamentRegistrationService;
 		this.teamService = teamService;
 		this.matchRepository = matchRepository;
@@ -104,8 +109,67 @@ public class HomeController {
 	}
 
 	@GetMapping({"/", "/home"})
-	public String home() {
+	public String home(Model model) {
+		List<FeaturedTournamentView> featuredTournaments = tournamentService.listTournaments().stream()
+				.sorted((a, b) -> {
+					int sa = tournamentStatusPriority(a.getStatus());
+					int sb = tournamentStatusPriority(b.getStatus());
+					if (sa != sb) {
+						return Integer.compare(sa, sb);
+					}
+					if (a.getCreatedAt() != null && b.getCreatedAt() != null) {
+						return b.getCreatedAt().compareTo(a.getCreatedAt());
+					}
+					return Long.compare(b.getId() == null ? 0 : b.getId(), a.getId() == null ? 0 : a.getId());
+				})
+				.limit(3)
+				.map(t -> new FeaturedTournamentView(
+						t.getId(),
+						t.getName(),
+						t.getImageUrl(),
+						featuredTournamentMeta(t),
+						t.getStatus() == null ? "Đang cập nhật" : tournamentStatusLabel(t.getStatus())
+				))
+				.collect(Collectors.toList());
+		model.addAttribute("featuredTournaments", featuredTournaments);
+		model.addAttribute("hasFeaturedTournaments", !featuredTournaments.isEmpty());
 		return "user/home/index";
+	}
+
+	private static int tournamentStatusPriority(TournamentStatus status) {
+		if (status == null) {
+			return 10;
+		}
+		return switch (status) {
+			case LIVE -> 0;
+			case UPCOMING -> 1;
+			case FINISHED -> 2;
+		};
+	}
+
+	private static String featuredTournamentMeta(Tournament t) {
+		if (t == null) {
+			return "";
+		}
+		String teamLimit = t.getTeamLimit() == null ? null : (t.getTeamLimit() + " đội");
+		String pitch = t.getPitchType() == null ? null : switch (t.getPitchType()) {
+			case PITCH_5 -> "Sân 5";
+			case PITCH_7 -> "Sân 7";
+			case PITCH_11 -> "Sân 11";
+		};
+		String mode = t.getMode() == null ? null : switch (t.getMode()) {
+			case KNOCKOUT -> "Knockout";
+			case GROUP_STAGE -> "Vòng bảng";
+		};
+
+		List<String> parts = new ArrayList<>();
+		if (teamLimit != null) parts.add(teamLimit);
+		if (pitch != null) parts.add(pitch);
+		if (mode != null) parts.add(mode);
+		return String.join(" • ", parts);
+	}
+
+	private record FeaturedTournamentView(Long id, String name, String imageUrl, String meta, String statusLabel) {
 	}
 
 	@GetMapping({"/tin-tuc", "/tin-tuc.html"})
@@ -1365,7 +1429,7 @@ public class HomeController {
 			default -> ".jpg";
 		};
 
-		Path baseDir = Paths.get("uploads", "avatars");
+		Path baseDir = Paths.get("src", "main", "resources", "static", "uploads", "avatars");
 		Files.createDirectories(baseDir);
 
 		String fileName = UUID.randomUUID().toString().replace("-", "") + ext;
@@ -1401,7 +1465,7 @@ public class HomeController {
 			default -> ".jpg";
 		};
 
-		Path baseDir = Paths.get("uploads", folder);
+		Path baseDir = Paths.get("src", "main", "resources", "static", "uploads", folder);
 		Files.createDirectories(baseDir);
 
 		String fileName = UUID.randomUUID().toString().replace("-", "") + ext;

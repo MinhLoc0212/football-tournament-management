@@ -1,24 +1,31 @@
 .bracket-section {
-    padding: 40px 0;
-    background: #fff;
+    padding: 28px 0;
+    background: transparent;
     overflow-x: auto;
-    min-height: 600px;
+    min-height: 560px;
 }
 
 .bracket-container {
-    display: flex;
-    gap: 60px;
-    padding: 20px;
-    min-width: 900px;
+    --connector: 36px;
+    --pair-gap: 64px;
+    --match-gap: 22px;
+    --row-h: 44px;
+    --match-h: 88px;
+    --line: rgba(0, 0, 0, 0.14);
+
+    display: grid;
+    grid-template-columns: 280px 280px 280px;
+    gap: 72px;
+    padding: 18px 20px 26px;
+    min-width: 980px;
     justify-content: center;
 }
 
 .bracket-column {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    flex: 1;
-    max-width: 250px;
+    display: grid;
+    align-content: start;
+    gap: var(--pair-gap);
+    max-width: 280px;
 }
 
 .bracket-round-title {
@@ -45,10 +52,9 @@
 
 .bracket-match {
     background: #fff;
-    border: 1px solid #eee;
-    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-    margin: 20px 0;
     position: relative;
     transition: transform 0.2s ease;
 }
@@ -62,9 +68,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 14px;
+    padding: 0 14px;
     font-size: 13px;
     font-weight: 600;
+    height: var(--row-h);
 }
 
 .bracket-team:first-child {
@@ -139,83 +146,57 @@
     color: #e8b931;
 }
 
-.bracket-column:nth-child(1) .bracket-match::after {
+.bracket-pair {
+    display: grid;
+    gap: var(--match-gap);
+    position: relative;
+}
+
+.round-quarter .bracket-pair::before,
+.round-semi .bracket-pair::before {
     content: '';
     position: absolute;
-    right: -30px;
-    width: 30px;
-    height: 2px;
-    background: #ddd;
-    top: 50%;
+    right: calc(var(--connector) * -1);
+    top: var(--row-h);
+    bottom: var(--row-h);
+    width: 2px;
+    background: var(--line);
 }
 
-.bracket-column:nth-child(1) .bracket-match:nth-of-type(odd)::after {
-    height: calc(50% + 40px);
-    border-right: 2px solid #ddd;
-    border-top: 2px solid #ddd;
-    background: transparent;
-    top: 50%;
-}
-
-.bracket-column:nth-child(1) .bracket-match:nth-of-type(even)::after {
-    height: calc(50% + 40px);
-    border-right: 2px solid #ddd;
-    border-bottom: 2px solid #ddd;
-    background: transparent;
-    top: calc(50% - (50% + 40px));
-}
-
-.bracket-column:nth-child(2) .bracket-match::after {
+.round-quarter .bracket-match::after,
+.round-semi .bracket-match::after {
     content: '';
     position: absolute;
-    right: -30px;
-    width: 30px;
+    right: calc(var(--connector) * -1);
+    top: 50%;
+    width: var(--connector);
     height: 2px;
-    background: #ddd;
-    top: 50%;
+    background: var(--line);
 }
 
-.bracket-column:nth-child(2) .bracket-match:nth-of-type(odd)::after {
-    height: calc(50% + 100px);
-    border-right: 2px solid #ddd;
-    border-top: 2px solid #ddd;
-    background: transparent;
-    top: 50%;
-}
-
-.bracket-column:nth-child(2) .bracket-match:nth-of-type(even)::after {
-    height: calc(50% + 100px);
-    border-right: 2px solid #ddd;
-    border-bottom: 2px solid #ddd;
-    background: transparent;
-    top: calc(50% - (50% + 100px));
-}
-
-.bracket-column:last-child .bracket-match::after {
-    display: none;
-}
-
-.bracket-column:nth-child(n+2) .bracket-match::before {
+.round-semi .bracket-match::before,
+.round-final .bracket-match::before {
     content: '';
     position: absolute;
-    left: -30px;
-    width: 30px;
-    height: 2px;
-    background: #ddd;
+    left: calc(var(--connector) * -1);
     top: 50%;
+    width: var(--connector);
+    height: 2px;
+    background: var(--line);
 }
 
 .round-quarter {
-    justify-content: space-around;
+    gap: var(--pair-gap);
 }
 
 .round-semi {
-    justify-content: space-around;
-    padding: 40px 0;
+    padding-top: 56px;
+    gap: calc(var(--pair-gap) + var(--match-h) + var(--match-gap));
 }
 
 .round-final {
-    justify-content: center;
+    padding-top: 156px;
+    gap: 16px;
 }
 
 .final-badge {
@@ -243,5 +224,9 @@
 @media (max-width: 768px) {
     .bracket-section {
         padding: 20px 0;
+    }
+
+    .bracket-container {
+        min-width: 920px;
     }
 }
