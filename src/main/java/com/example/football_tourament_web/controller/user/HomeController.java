@@ -9,15 +9,18 @@ import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
+import java.util.ArrayList;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,11 +28,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.football_tourament_web.model.dto.NewsItem;
+import com.example.football_tourament_web.model.entity.Match;
+import com.example.football_tourament_web.model.entity.Player;
+import com.example.football_tourament_web.model.entity.Team;
 import com.example.football_tourament_web.model.entity.Transaction;
 import com.example.football_tourament_web.model.enums.Gender;
+import com.example.football_tourament_web.model.enums.MatchStatus;
 import com.example.football_tourament_web.model.enums.TransactionStatus;
+import com.example.football_tourament_web.model.enums.TournamentStatus;
+import com.example.football_tourament_web.repository.MatchRepository;
 import com.example.football_tourament_web.repository.PlayerRepository;
 import com.example.football_tourament_web.service.CbsSportsNewsService;
 import com.example.football_tourament_web.service.TeamService;
@@ -59,6 +69,7 @@ public class HomeController {
 	private final TransactionService transactionService;
 	private final TournamentRegistrationService tournamentRegistrationService;
 	private final TeamService teamService;
+	private final MatchRepository matchRepository;
 	private final PlayerRepository playerRepository;
 	private final HttpClient httpClient;
 	private static final Pattern LAT_PATTERN = Pattern.compile("\"lat\"\\s*:\\s*\"([^\"]+)\"");
@@ -71,6 +82,7 @@ public class HomeController {
 			TransactionService transactionService,
 			TournamentRegistrationService tournamentRegistrationService,
 			TeamService teamService,
+			MatchRepository matchRepository,
 			PlayerRepository playerRepository
 	) {
 		this.cbsSportsNewsService = cbsSportsNewsService;
@@ -78,6 +90,7 @@ public class HomeController {
 		this.transactionService = transactionService;
 		this.tournamentRegistrationService = tournamentRegistrationService;
 		this.teamService = teamService;
+		this.matchRepository = matchRepository;
 		this.playerRepository = playerRepository;
 		this.httpClient = HttpClient.newBuilder()
 				.followRedirects(HttpClient.Redirect.NORMAL)
@@ -287,7 +300,15 @@ public class HomeController {
 	}
 
 	@GetMapping({"/thong-tin-doi", "/thong-tin-doi.html"})
-	public String teamInfo(Model model, Authentication authentication) {
+	public String teamInfo(
+			@RequestParam(name = "teamId", required = false) Long teamId,
+			@RequestParam(name = "tournamentId", required = false) Long tournamentId,
+			@RequestParam(name = "tab", required = false) String tab,
+			@RequestParam(name = "create", required = false) String create,
+			@RequestParam(name = "edit", required = false) String edit,
+			Model model,
+			Authentication authentication
+	) {
 		var user = requireCurrentUser(authentication);
 		if (user == null) {
 			return "redirect:/dang-nhap";
@@ -295,22 +316,253 @@ public class HomeController {
 
 		attachCommonProfileModel(model, user);
 
-		var teamOpt = teamService.findCaptainTeam(user.getId());
-		if (teamOpt.isEmpty()) {
-			model.addAttribute("teamName", "");
-			model.addAttribute("captainName", user.getFullName());
-			model.addAttribute("memberCount", 0);
-			model.addAttribute("members", List.of());
-			return "user/profile/team-info";
+		List<TeamCardView> teams = teamService.listByCaptain(user.getId()).stream()
+				.map(t -> new TeamCardView(
+						t.getId(),
+						t.getName(),
+						t.getLogoUrl(),
+						(int) playerRepository.countByTeamId(t.getId())
+				))
+				.collect(Collectors.toList());
+		model.addAttribute("teams", teams);
+
+		boolean canCreateTeam = teams.size() < 2;
+		model.addAttribute("canCreateTeam", canCreateTeam);
+
+		Long selectedTeamId = teamId;
+		if (selectedTeamId == null && !teams.isEmpty()) {
+			selectedTeamId = teams.get(0).id();
 		}
 
-		var team = teamOpt.get();
-		var players = playerRepository.findByTeamIdOrderByJerseyNumberAsc(team.getId());
-		model.addAttribute("teamName", team.getName());
-		model.addAttribute("captainName", user.getFullName());
-		model.addAttribute("memberCount", players.size());
-		model.addAttribute("members", players);
+		boolean isCreate = create != null;
+		boolean isEdit = edit != null;
+
+		if (isCreate && !canCreateTeam) {
+			return "redirect:/thong-tin-doi?limitReached";
+		}
+
+		if (selectedTeamId != null) {
+			var selectedOpt = teamService.findById(selectedTeamId)
+					.filter(t -> t.getCaptain() != null && t.getCaptain().getId().equals(user.getId()));
+			if (selectedOpt.isPresent()) {
+				Team selectedTeam = selectedOpt.get();
+				List<Player> members = playerRepository.findByTeamIdOrderByJerseyNumberAsc(selectedTeam.getId());
+				model.addAttribute("selectedTeam", selectedTeam);
+				model.addAttribute("members", members);
+
+				if (isEdit) {
+					model.addAttribute("editTeamId", selectedTeam.getId());
+					if (!model.containsAttribute("teamForm")) {
+						TeamCreateForm f = new TeamCreateForm();
+						f.setTeamName(selectedTeam.getName());
+						model.addAttribute("teamForm", f);
+					}
+					ensureMemberSlots(model, members);
+				}
+
+				if (!isCreate && !isEdit) {
+					model.addAttribute("activeTeamTab", tab == null || tab.isBlank() ? "info" : tab);
+					attachTeamDetailModel(model, selectedTeam, tournamentId);
+				}
+			}
+		}
+
+		model.addAttribute("isCreate", isCreate);
+		model.addAttribute("isEdit", isEdit);
+		if (isCreate && !model.containsAttribute("teamForm")) {
+			model.addAttribute("teamForm", new TeamCreateForm());
+		}
+		if (isCreate) {
+			ensureMemberSlots(model, List.of());
+		}
 		return "user/profile/team-info";
+	}
+
+	@PostMapping("/thong-tin-doi/tao-doi")
+	public String createTeam(
+			@Valid TeamCreateForm teamForm,
+			BindingResult bindingResult,
+			@RequestParam(name = "teamLogo", required = false) MultipartFile teamLogo,
+			@RequestParam(name = "memberName", required = false) List<String> memberNames,
+			@RequestParam(name = "memberJersey", required = false) List<Integer> memberJerseys,
+			@RequestParam(name = "memberAvatar", required = false) MultipartFile[] memberAvatars,
+			Authentication authentication,
+			Model model
+	) {
+		var user = requireCurrentUser(authentication);
+		if (user == null) {
+			return "redirect:/dang-nhap";
+		}
+
+		if (teamService.countByCaptain(user.getId()) >= 2) {
+			return "redirect:/thong-tin-doi?limitReached";
+		}
+
+		if (bindingResult.hasErrors()) {
+			return renderCreateTeamError(model, user, teamForm);
+		}
+
+		String name = teamForm.teamName == null ? "" : teamForm.teamName.trim();
+		if (name.isBlank()) {
+			bindingResult.rejectValue("teamName", "teamName.blank", "Vui lòng nhập tên đội");
+			return renderCreateTeamError(model, user, teamForm);
+		}
+
+		if (teamService.findByName(name).isPresent()) {
+			bindingResult.rejectValue("teamName", "teamName.exists", "Tên đội đã tồn tại");
+			return renderCreateTeamError(model, user, teamForm);
+		}
+
+		String logoUrl = null;
+		try {
+			if (teamLogo != null && !teamLogo.isEmpty()) {
+				logoUrl = storeImageFile(teamLogo, "teams", 2L * 1024 * 1024);
+			}
+		} catch (AvatarTooLargeException ex) {
+			return "redirect:/thong-tin-doi?create=1&logoTooLarge";
+		} catch (AvatarInvalidTypeException ex) {
+			return "redirect:/thong-tin-doi?create=1&logoInvalidType";
+		} catch (Exception ex) {
+			return "redirect:/thong-tin-doi?create=1&logoError";
+		}
+
+		Team team = new Team(name);
+		team.setCaptain(user);
+		team.setLogoUrl(logoUrl);
+		team = teamService.save(team);
+
+		List<Player> players = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			String n = memberNames != null && i < memberNames.size() ? memberNames.get(i) : null;
+			if (n == null || n.trim().isBlank()) {
+				continue;
+			}
+
+			Integer jersey = memberJerseys != null && i < memberJerseys.size() ? memberJerseys.get(i) : null;
+			if (jersey != null && (jersey < 0 || jersey > 999)) {
+				jersey = null;
+			}
+
+			String avatarUrl = null;
+			try {
+				MultipartFile avatarFile = memberAvatars != null && i < memberAvatars.length ? memberAvatars[i] : null;
+				if (avatarFile != null && !avatarFile.isEmpty()) {
+					avatarUrl = storeImageFile(avatarFile, "players", 2L * 1024 * 1024);
+				}
+			} catch (Exception ex) {
+				avatarUrl = null;
+			}
+
+			Player p = new Player(n.trim(), team);
+			p.setJerseyNumber(jersey);
+			p.setRole("Cầu thủ");
+			p.setAvatarUrl(avatarUrl);
+			players.add(p);
+		}
+		if (!players.isEmpty()) {
+			playerRepository.saveAll(players);
+		}
+
+		return "redirect:/thong-tin-doi?teamId=" + team.getId();
+	}
+
+	@PostMapping("/thong-tin-doi/cap-nhat-doi")
+	@Transactional
+	public String updateTeam(
+			@RequestParam("teamId") Long teamId,
+			@Valid TeamCreateForm teamForm,
+			BindingResult bindingResult,
+			@RequestParam(name = "existingLogoUrl", required = false) String existingLogoUrl,
+			@RequestParam(name = "teamLogo", required = false) MultipartFile teamLogo,
+			@RequestParam(name = "memberName", required = false) List<String> memberNames,
+			@RequestParam(name = "memberJersey", required = false) List<Integer> memberJerseys,
+			@RequestParam(name = "existingMemberAvatar", required = false) List<String> existingMemberAvatars,
+			@RequestParam(name = "memberAvatar", required = false) MultipartFile[] memberAvatars,
+			Authentication authentication,
+			Model model
+	) {
+		var user = requireCurrentUser(authentication);
+		if (user == null) {
+			return "redirect:/dang-nhap";
+		}
+
+		var teamOpt = teamService.findById(teamId)
+				.filter(t -> t.getCaptain() != null && t.getCaptain().getId().equals(user.getId()));
+		if (teamOpt.isEmpty()) {
+			return "redirect:/thong-tin-doi";
+		}
+		Team team = teamOpt.get();
+
+		if (bindingResult.hasErrors()) {
+			return renderEditTeamError(model, user, team, teamForm);
+		}
+
+		String name = teamForm.teamName == null ? "" : teamForm.teamName.trim();
+		if (name.isBlank()) {
+			bindingResult.rejectValue("teamName", "teamName.blank", "Vui lòng nhập tên đội");
+			return renderEditTeamError(model, user, team, teamForm);
+		}
+
+		var existingByName = teamService.findByName(name);
+		if (existingByName.isPresent() && !existingByName.get().getId().equals(team.getId())) {
+			bindingResult.rejectValue("teamName", "teamName.exists", "Tên đội đã tồn tại");
+			return renderEditTeamError(model, user, team, teamForm);
+		}
+
+		String nextLogoUrl = existingLogoUrl;
+		try {
+			if (teamLogo != null && !teamLogo.isEmpty()) {
+				nextLogoUrl = storeImageFile(teamLogo, "teams", 2L * 1024 * 1024);
+			}
+		} catch (AvatarTooLargeException ex) {
+			return "redirect:/thong-tin-doi?teamId=" + team.getId() + "&edit=1&logoTooLarge";
+		} catch (AvatarInvalidTypeException ex) {
+			return "redirect:/thong-tin-doi?teamId=" + team.getId() + "&edit=1&logoInvalidType";
+		} catch (Exception ex) {
+			return "redirect:/thong-tin-doi?teamId=" + team.getId() + "&edit=1&logoError";
+		}
+
+		team.setName(name);
+		team.setLogoUrl(nextLogoUrl);
+		teamService.save(team);
+
+		playerRepository.deleteByTeamId(team.getId());
+
+		List<Player> players = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			String n = memberNames != null && i < memberNames.size() ? memberNames.get(i) : null;
+			if (n == null || n.trim().isBlank()) {
+				continue;
+			}
+
+			Integer jersey = memberJerseys != null && i < memberJerseys.size() ? memberJerseys.get(i) : null;
+			if (jersey != null && (jersey < 0 || jersey > 999)) {
+				jersey = null;
+			}
+
+			String avatarUrl = existingMemberAvatars != null && i < existingMemberAvatars.size()
+					? existingMemberAvatars.get(i)
+					: null;
+			try {
+				MultipartFile avatarFile = memberAvatars != null && i < memberAvatars.length ? memberAvatars[i] : null;
+				if (avatarFile != null && !avatarFile.isEmpty()) {
+					avatarUrl = storeImageFile(avatarFile, "players", 2L * 1024 * 1024);
+				}
+			} catch (Exception ex) {
+				avatarUrl = null;
+			}
+
+			Player p = new Player(n.trim(), team);
+			p.setJerseyNumber(jersey);
+			p.setRole("Cầu thủ");
+			p.setAvatarUrl(avatarUrl);
+			players.add(p);
+		}
+		if (!players.isEmpty()) {
+			playerRepository.saveAll(players);
+		}
+
+		return "redirect:/thong-tin-doi?teamId=" + team.getId();
 	}
 
 	@GetMapping({"/lich-su-dang-ky", "/lich-su-dang-ky.html"})
@@ -497,6 +749,7 @@ public class HomeController {
 
 		private Gender gender;
 
+		@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
 		private java.time.LocalDate dateOfBirth;
 
 		private String avatarUrl;
@@ -604,10 +857,41 @@ public class HomeController {
 		}
 	}
 
+	public static class TeamCreateForm {
+		@NotBlank(message = "Vui lòng nhập tên đội")
+		private String teamName;
+
+		public String getTeamName() {
+			return teamName;
+		}
+
+		public void setTeamName(String teamName) {
+			this.teamName = teamName;
+		}
+	}
+
 	private record TransactionView(String code, String description, String amount, String time, String status) {
 	}
 
 	private record RegistrationView(String tournamentName, String teamName, String date, String status) {
+	}
+
+	private record TeamCardView(Long id, String name, String logoUrl, int memberCount) {
+	}
+
+	private record MemberSlot(String name, Integer jerseyNumber, String avatarUrl) {
+	}
+
+	private record ScheduleRow(String date, String time, String tournamentName, String opponentName, String round, String status) {
+	}
+
+	private record ResultRow(String date, String tournamentName, String opponentName, String score, String round) {
+	}
+
+	private record TournamentOption(Long id, String name) {
+	}
+
+	private record SeasonCard(Long tournamentId, String tournamentName, String statusLabel, String statusClass, String achievementLabel, String achievementClass) {
 	}
 
 	private com.example.football_tourament_web.model.entity.AppUser requireCurrentUser(Authentication authentication) {
@@ -634,6 +918,275 @@ public class HomeController {
 
 		model.addAttribute("avatarSrc", avatarSrc);
 		model.addAttribute("balanceText", balanceText);
+	}
+
+	private void attachTeamDetailModel(Model model, Team team, Long tournamentId) {
+		var registrations = tournamentRegistrationService.listApprovedByTeamId(team.getId());
+		boolean hasRegistrations = registrations != null && !registrations.isEmpty();
+		model.addAttribute("hasTeamRegistrations", hasRegistrations);
+
+		if (!hasRegistrations) {
+			model.addAttribute("scheduleRows", List.of());
+			model.addAttribute("resultRows", List.of());
+			model.addAttribute("recentResults", List.of());
+			model.addAttribute("seasonCards", List.of());
+			model.addAttribute("tournamentOptions", List.of());
+			model.addAttribute("selectedTournamentId", null);
+			model.addAttribute("analysisWin", 0);
+			model.addAttribute("analysisDraw", 0);
+			model.addAttribute("analysisLoss", 0);
+			model.addAttribute("analysisLabels", List.of());
+			model.addAttribute("analysisGoalsFor", List.of());
+			model.addAttribute("analysisGoalsAgainst", List.of());
+			return;
+		}
+
+		List<TournamentOption> tournamentOptions = registrations.stream()
+				.map(r -> new TournamentOption(r.getTournament().getId(), r.getTournament().getName()))
+				.distinct()
+				.collect(Collectors.toList());
+		model.addAttribute("tournamentOptions", tournamentOptions);
+
+		List<Long> tournamentIds = registrations.stream()
+				.map(r -> r.getTournament().getId())
+				.distinct()
+				.collect(Collectors.toList());
+
+		Long selectedTournamentId = tournamentId != null && tournamentIds.contains(tournamentId) ? tournamentId : null;
+		model.addAttribute("selectedTournamentId", selectedTournamentId);
+
+		List<Match> matches;
+		if (selectedTournamentId != null) {
+			matches = matchRepository.findByTeamIdAndTournamentIdWithDetails(team.getId(), selectedTournamentId);
+		} else {
+			matches = matchRepository.findByTeamIdWithDetails(team.getId()).stream()
+					.filter(m -> m.getTournament() != null && m.getTournament().getId() != null && tournamentIds.contains(m.getTournament().getId()))
+					.collect(Collectors.toList());
+		}
+
+		List<ScheduleRow> scheduleRows = matches.stream()
+				.filter(m -> m.getScheduledAt() != null && m.getStatus() != MatchStatus.FINISHED)
+				.map(m -> new ScheduleRow(
+						formatDate(m.getScheduledAt()),
+						formatTime(m.getScheduledAt()),
+						m.getTournament().getName(),
+						opponentName(team.getId(), m),
+						m.getRoundName() == null ? "" : m.getRoundName(),
+						matchStatusLabel(m.getStatus())
+				))
+				.collect(Collectors.toList());
+		model.addAttribute("scheduleRows", scheduleRows);
+
+		List<ResultRow> resultRows = matches.stream()
+				.filter(m -> m.getScheduledAt() != null && m.getStatus() == MatchStatus.FINISHED)
+				.sorted((a, b) -> b.getScheduledAt().compareTo(a.getScheduledAt()))
+				.map(m -> new ResultRow(
+						formatDate(m.getScheduledAt()),
+						m.getTournament().getName(),
+						opponentName(team.getId(), m),
+						scoreText(team.getId(), m),
+						m.getRoundName() == null ? "" : m.getRoundName()
+				))
+				.collect(Collectors.toList());
+		model.addAttribute("resultRows", resultRows);
+
+		model.addAttribute("recentResults", resultRows.stream().limit(6).collect(Collectors.toList()));
+
+		List<SeasonCard> seasonCards = registrations.stream()
+				.map(r -> {
+					var t = r.getTournament();
+					String statusLabel = tournamentStatusLabel(t.getStatus());
+					String statusClass = tournamentStatusClass(t.getStatus());
+
+					String achievementLabel = "Đã tham gia";
+					String achievementClass = "badge--joined";
+
+					if (t.getStatus() == TournamentStatus.FINISHED) {
+						if (t.getWinner() != null && t.getWinner().getId() != null && t.getWinner().getId().equals(team.getId())) {
+							achievementLabel = "Vô địch";
+							achievementClass = "badge--champion";
+						} else {
+							boolean runnerUp = isRunnerUp(team.getId(), matches, t.getId());
+							if (runnerUp) {
+								achievementLabel = "Á quân";
+								achievementClass = "badge--runnerup";
+							}
+						}
+					}
+
+					return new SeasonCard(t.getId(), t.getName(), statusLabel, statusClass, achievementLabel, achievementClass);
+				})
+				.collect(Collectors.toList());
+		model.addAttribute("seasonCards", seasonCards);
+
+		int win = 0;
+		int draw = 0;
+		int loss = 0;
+		List<String> labels = new ArrayList<>();
+		List<Integer> goalsFor = new ArrayList<>();
+		List<Integer> goalsAgainst = new ArrayList<>();
+
+		List<Match> finished = matches.stream()
+				.filter(m -> m.getStatus() == MatchStatus.FINISHED)
+				.sorted((a, b) -> a.getScheduledAt() == null || b.getScheduledAt() == null ? 0 : a.getScheduledAt().compareTo(b.getScheduledAt()))
+				.collect(Collectors.toList());
+
+		for (Match m : finished) {
+			Integer gf = goalsFor(team.getId(), m);
+			Integer ga = goalsAgainst(team.getId(), m);
+			if (gf != null && ga != null) {
+				if (gf > ga) {
+					win++;
+				} else if (gf.equals(ga)) {
+					draw++;
+				} else {
+					loss++;
+				}
+			}
+		}
+
+		List<Match> lastForChart = finished.stream()
+				.sorted((a, b) -> b.getScheduledAt() == null || a.getScheduledAt() == null ? 0 : b.getScheduledAt().compareTo(a.getScheduledAt()))
+				.limit(8)
+				.collect(Collectors.toList());
+		java.util.Collections.reverse(lastForChart);
+
+		for (Match m : lastForChart) {
+			String label = m.getRoundName() != null && !m.getRoundName().isBlank()
+					? m.getRoundName()
+					: (m.getScheduledAt() == null ? "Trận" : formatDate(m.getScheduledAt()));
+			labels.add(label);
+			goalsFor.add(safeInt(goalsFor(team.getId(), m)));
+			goalsAgainst.add(safeInt(goalsAgainst(team.getId(), m)));
+		}
+
+		model.addAttribute("analysisWin", win);
+		model.addAttribute("analysisDraw", draw);
+		model.addAttribute("analysisLoss", loss);
+		model.addAttribute("analysisLabels", labels);
+		model.addAttribute("analysisGoalsFor", goalsFor);
+		model.addAttribute("analysisGoalsAgainst", goalsAgainst);
+	}
+
+	private static String formatDate(LocalDateTime dt) {
+		if (dt == null) {
+			return "";
+		}
+		return dt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+	}
+
+	private static String formatTime(LocalDateTime dt) {
+		if (dt == null) {
+			return "";
+		}
+		return dt.format(DateTimeFormatter.ofPattern("HH:mm"));
+	}
+
+	private static String matchStatusLabel(MatchStatus status) {
+		if (status == null) {
+			return "";
+		}
+		return switch (status) {
+			case SCHEDULED -> "Sắp diễn ra";
+			case LIVE -> "Đang diễn ra";
+			case FINISHED -> "Đã kết thúc";
+		};
+	}
+
+	private static String tournamentStatusLabel(TournamentStatus status) {
+		if (status == null) {
+			return "";
+		}
+		return switch (status) {
+			case UPCOMING -> "Sắp diễn ra";
+			case LIVE -> "Đang diễn ra";
+			case FINISHED -> "Đã kết thúc";
+		};
+	}
+
+	private static String tournamentStatusClass(TournamentStatus status) {
+		if (status == null) {
+			return "badge--muted";
+		}
+		return switch (status) {
+			case UPCOMING -> "badge--upcoming";
+			case LIVE -> "badge--live";
+			case FINISHED -> "badge--finished";
+		};
+	}
+
+	private static String opponentName(Long teamId, Match m) {
+		if (m == null || teamId == null) {
+			return "";
+		}
+		if (m.getHomeTeam() != null && teamId.equals(m.getHomeTeam().getId())) {
+			return m.getAwayTeam() == null ? "" : m.getAwayTeam().getName();
+		}
+		return m.getHomeTeam() == null ? "" : m.getHomeTeam().getName();
+	}
+
+	private static Integer goalsFor(Long teamId, Match m) {
+		if (m == null || teamId == null) {
+			return null;
+		}
+		if (m.getHomeTeam() != null && teamId.equals(m.getHomeTeam().getId())) {
+			return m.getHomeScore();
+		}
+		if (m.getAwayTeam() != null && teamId.equals(m.getAwayTeam().getId())) {
+			return m.getAwayScore();
+		}
+		return null;
+	}
+
+	private static Integer goalsAgainst(Long teamId, Match m) {
+		if (m == null || teamId == null) {
+			return null;
+		}
+		if (m.getHomeTeam() != null && teamId.equals(m.getHomeTeam().getId())) {
+			return m.getAwayScore();
+		}
+		if (m.getAwayTeam() != null && teamId.equals(m.getAwayTeam().getId())) {
+			return m.getHomeScore();
+		}
+		return null;
+	}
+
+	private static String scoreText(Long teamId, Match m) {
+		Integer gf = goalsFor(teamId, m);
+		Integer ga = goalsAgainst(teamId, m);
+		if (gf == null || ga == null) {
+			return "-";
+		}
+		return gf + " - " + ga;
+	}
+
+	private static boolean isRunnerUp(Long teamId, List<Match> matches, Long tournamentId) {
+		if (teamId == null || matches == null || tournamentId == null) {
+			return false;
+		}
+
+		Match finalMatch = matches.stream()
+				.filter(m -> m.getTournament() != null && tournamentId.equals(m.getTournament().getId()))
+				.filter(m -> m.getRoundName() != null)
+				.filter(m -> {
+					String rn = m.getRoundName().toLowerCase(Locale.ROOT);
+					return rn.contains("chung kết") || rn.contains("final");
+				})
+				.findFirst()
+				.orElse(null);
+		if (finalMatch == null) {
+			return false;
+		}
+		Integer gf = goalsFor(teamId, finalMatch);
+		Integer ga = goalsAgainst(teamId, finalMatch);
+		if (gf == null || ga == null) {
+			return false;
+		}
+		return gf < ga;
+	}
+
+	private static int safeInt(Integer value) {
+		return value == null ? 0 : value;
 	}
 
 	private String storeAvatarFile(MultipartFile avatarFile) throws Exception {
@@ -672,10 +1225,113 @@ public class HomeController {
 		return "/uploads/avatars/" + fileName;
 	}
 
+	private String storeImageFile(MultipartFile file, String folder, long maxBytes) throws Exception {
+		if (file == null || file.isEmpty()) {
+			return null;
+		}
+		if (file.getSize() > maxBytes) {
+			throw new AvatarTooLargeException();
+		}
+
+		String contentType = file.getContentType();
+		Set<String> allowed = Set.of("image/jpeg", "image/png", "image/webp");
+		if (contentType == null || !allowed.contains(contentType)) {
+			throw new AvatarInvalidTypeException();
+		}
+
+		String ext = switch (contentType) {
+			case "image/png" -> ".png";
+			case "image/webp" -> ".webp";
+			default -> ".jpg";
+		};
+
+		Path baseDir = Paths.get("uploads", folder);
+		Files.createDirectories(baseDir);
+
+		String fileName = UUID.randomUUID().toString().replace("-", "") + ext;
+		Path target = baseDir.resolve(fileName).normalize();
+		if (!target.startsWith(baseDir)) {
+			return null;
+		}
+
+		try (var in = file.getInputStream()) {
+			Files.copy(in, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+		}
+
+		return "/uploads/" + folder + "/" + fileName;
+	}
+
 	private static class AvatarTooLargeException extends RuntimeException {
 	}
 
 	private static class AvatarInvalidTypeException extends RuntimeException {
+	}
+
+	private String renderCreateTeamError(Model model, com.example.football_tourament_web.model.entity.AppUser user, TeamCreateForm teamForm) {
+		attachCommonProfileModel(model, user);
+		List<TeamCardView> teams = teamService.listByCaptain(user.getId()).stream()
+				.map(t -> new TeamCardView(
+						t.getId(),
+						t.getName(),
+						t.getLogoUrl(),
+						(int) playerRepository.countByTeamId(t.getId())
+				))
+				.collect(Collectors.toList());
+		model.addAttribute("teams", teams);
+		model.addAttribute("canCreateTeam", teams.size() < 2);
+		model.addAttribute("isCreate", true);
+		model.addAttribute("isEdit", false);
+		model.addAttribute("teamForm", teamForm);
+		ensureMemberSlots(model, List.of());
+		return "user/profile/team-info";
+	}
+
+	private String renderEditTeamError(Model model, com.example.football_tourament_web.model.entity.AppUser user, Team team, TeamCreateForm teamForm) {
+		attachCommonProfileModel(model, user);
+		List<TeamCardView> teams = teamService.listByCaptain(user.getId()).stream()
+				.map(t -> new TeamCardView(
+						t.getId(),
+						t.getName(),
+						t.getLogoUrl(),
+						(int) playerRepository.countByTeamId(t.getId())
+				))
+				.collect(Collectors.toList());
+		model.addAttribute("teams", teams);
+		model.addAttribute("canCreateTeam", teams.size() < 2);
+		model.addAttribute("selectedTeam", team);
+		List<Player> members = playerRepository.findByTeamIdOrderByJerseyNumberAsc(team.getId());
+		model.addAttribute("members", members);
+		List<MemberSlot> slots = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			Player p = i < members.size() ? members.get(i) : null;
+			slots.add(new MemberSlot(
+					p == null ? "" : p.getFullName(),
+					p == null ? null : p.getJerseyNumber(),
+					p == null ? null : p.getAvatarUrl()
+			));
+		}
+		model.addAttribute("memberSlots", slots);
+		model.addAttribute("isCreate", false);
+		model.addAttribute("isEdit", true);
+		model.addAttribute("editTeamId", team.getId());
+		model.addAttribute("teamForm", teamForm);
+		return "user/profile/team-info";
+	}
+
+	private void ensureMemberSlots(Model model, List<Player> members) {
+		if (model.containsAttribute("memberSlots")) {
+			return;
+		}
+		List<MemberSlot> slots = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			Player p = i < members.size() ? members.get(i) : null;
+			slots.add(new MemberSlot(
+					p == null ? "" : p.getFullName(),
+					p == null ? null : p.getJerseyNumber(),
+					p == null ? null : p.getAvatarUrl()
+			));
+		}
+		model.addAttribute("memberSlots", slots);
 	}
 
 	private static String formatVnd(BigDecimal amount) {
