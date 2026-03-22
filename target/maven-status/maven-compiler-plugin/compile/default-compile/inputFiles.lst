@@ -3,6 +3,7 @@ C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\examp
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\controller\user\HomeController.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\controller\user\TournamentController.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\FootballTouramentWebApplication.java
+C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\model\dto\NewsItem.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\model\entity\AppUser.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\model\entity\Match.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\model\entity\Player.java
@@ -25,6 +26,7 @@ C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\examp
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\repository\TournamentRegistrationRepository.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\repository\TournamentRepository.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\repository\TransactionRepository.java
+C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\service\CbsSportsNewsService.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\service\MatchService.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\service\TeamService.java
 C:\Users\acer\Desktop\java-football-tournament-front-end\src\main\java\com\example\football_tourament_web\service\TournamentRegistrationService.java

@@ -25,43 +25,57 @@
 
       <section class="news">
         <div class="container">
-          <div class="news-grid">
-            <article class="card">
-              <img src="/assets/figma/news-1.png" alt="Tin tức 1" />
-              <div class="content">
-                <h2 class="title">Tin tức 1</h2>
-                <p class="desc">
-                  Cập nhật các hoạt động thể thao và giải đấu mới nhất trên nền tảng.
-                </p>
-              </div>
-            </article>
+          <p th:if="${!hasNews}">Không tải được tin tức từ CBS Sports. Vui lòng thử lại sau.</p>
 
-            <article class="card">
-              <img src="/assets/figma/news-2.png" alt="Tin tức 2" />
+          <div class="news-grid" th:if="${hasNews}">
+            <article class="card" th:each="item : ${newsItems}">
+              <a th:href="${item.link}" target="_blank" rel="noopener noreferrer">
+                <img
+                  th:src="${item.imageUrl} ?: '/assets/figma/news-1.png'"
+                  th:alt="${item.title}"
+                />
+              </a>
               <div class="content">
-                <h2 class="title">Tin tức 2</h2>
-                <p class="desc">
-                  Theo dõi lịch trình, sự kiện và những thông tin nổi bật liên quan đến thể thao.
-                </p>
-              </div>
-            </article>
-
-            <article class="card">
-              <img src="/assets/figma/news-3.png" alt="Tin tức 3" />
-              <div class="content">
-                <h2 class="title">Tin tức 3</h2>
-                <p class="desc">
-                  Nội dung tổng hợp, bài viết và thông báo dành cho cộng đồng yêu thích thể thao.
-                </p>
+                <h2 class="title">
+                  <a th:href="${item.link}" target="_blank" rel="noopener noreferrer" th:text="${item.title}">
+                    Tiêu đề tin tức
+                  </a>
+                </h2>
+                <p class="desc" th:text="${item.description}">Nội dung mô tả ngắn</p>
               </div>
             </article>
           </div>
 
-          <nav class="pagination" aria-label="Phân trang">
-            <a href="#" aria-current="page">1</a>
-            <a href="#">2</a>
-            <a href="#">3</a>
-            <a href="#" aria-label="Trang tiếp theo">...</a>
+          <nav class="pagination" aria-label="Phân trang" th:if="${totalPages > 1}">
+            <a
+              th:if="${currentPage > 1}"
+              th:href="@{/tin-tuc(page=${currentPage - 1})}"
+              aria-label="Trang trước"
+              >‹</a
+            >
+
+            <a th:if="${startPage > 1}" th:href="@{/tin-tuc(page=1)}">1</a>
+            <a th:if="${startPage > 2}" aria-disabled="true">...</a>
+
+            <a
+              th:each="p : ${#numbers.sequence(startPage, endPage)}"
+              th:href="@{/tin-tuc(page=${p})}"
+              th:text="${p}"
+              th:attr="aria-current=${p == currentPage} ? 'page' : null"
+              >1</a
+            >
+
+            <a th:if="${endPage < totalPages - 1}" aria-disabled="true">...</a>
+            <a th:if="${endPage < totalPages}" th:href="@{/tin-tuc(page=${totalPages})}" th:text="${totalPages}"
+              >1</a
+            >
+
+            <a
+              th:if="${currentPage < totalPages}"
+              th:href="@{/tin-tuc(page=${currentPage + 1})}"
+              aria-label="Trang tiếp"
+              >›</a
+            >
           </nav>
         </div>
       </section>

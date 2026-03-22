@@ -11,6 +11,12 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" th:href="@{/assets/css/user-home.css}" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
   </head>
   <body>
     <header th:replace="~{user/fragments/header :: header('contact')}"></header>
@@ -36,9 +42,7 @@
                 <img src="/assets/figma/icon-mail.svg" alt="" />
                 <div>sporttournament@example.com</div>
               </div>
-              <div class="map" aria-label="Bản đồ">
-                MAP PLACEHOLDER
-              </div>
+              <div class="map" id="contactMap" aria-label="Bản đồ">Đang tải bản đồ...</div>
             </div>
 
             <div class="panel">
@@ -66,5 +70,41 @@
       </section>
     </main>
     <footer th:replace="~{user/fragments/footer :: footer('contact')}"></footer>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script>
+      (async () => {
+        const mapEl = document.getElementById("contactMap");
+        if (!mapEl) return;
+
+        try {
+          const q = "TP. Thủ Đức, TP. Hồ Chí Minh, Việt Nam";
+          const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+          if (!res.ok) {
+            throw new Error("Geocode failed");
+          }
+
+          const data = await res.json();
+          if (!data || typeof data.lat !== "number" || typeof data.lon !== "number") {
+            throw new Error("Invalid response");
+          }
+
+          mapEl.classList.add("is-loaded");
+          mapEl.textContent = "";
+
+          const map = L.map(mapEl).setView([data.lat, data.lon], 13);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          }).addTo(map);
+
+          L.marker([data.lat, data.lon]).addTo(map).bindPopup(data.displayName || q).openPopup();
+        } catch (e) {
+          mapEl.textContent = "Không tải được bản đồ. Vui lòng thử lại sau.";
+        }
+      })();
+    </script>
   </body>
 </html>
