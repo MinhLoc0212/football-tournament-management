@@ -9,43 +9,50 @@ public class AdminController {
 
 	@GetMapping({"/admin", "/admin/general-overview"})
 	public String generalOverview() {
-		return "admin/general-overview";
+		return "admin/dashboard/general-overview";
 	}
 
 	@GetMapping({"/admin/admin-profile", "/admin/profile"})
 	public String adminProfile() {
-		return "admin/admin-profile";
+		return "admin/profile/admin-profile";
 	}
 
-	@GetMapping({"/admin/manage", "/admin/manage-tournament", "/admin/manage/tournament"})
+	@GetMapping({"/admin/manage-tournament", "/admin/manage/tournament"})
 	public String manageTournament() {
 		return "admin/manage/manage-tournament";
 	}
 
-	@GetMapping({"/admin/manage", "/admin/manage-user", "/admin/manage/user"})
+	@GetMapping({"/admin/manage-user", "/admin/manage/user"})
 	public String manageUser() {
 		return "admin/manage/manage-user";
 	}
+
+	@GetMapping("/admin/manage")
+	public String manageHome() {
+		return "redirect:/admin/manage/tournament";
+	}
+
 	@GetMapping("/admin/team-management")
 	public String teamManagement() {
-		return "/admin/team-management";
+		return "admin/team/team-management";
 	}
 
 	@GetMapping("/admin/team-detail")
 	public String teamDetail() {
-		return "/admin/team-detail";
+		return "admin/team/team-detail";
 	}
 
 	@GetMapping("/admin/invoice-management")
 	public String invoiceManagement() {
-		return "admin/invoice-management";
+		return "admin/invoice/invoice-management";
 	}
 
 	@GetMapping("/admin/tournament-bracket")
 	public String tournamentBracket() {
-		return "admin/tournament-bracket";
+		return "admin/tournament/tournament-bracket";
 	}
-	@GetMapping({"/admin/manage", "admin/manage/user-detail", "/admin/manage/user-detail"})
+
+	@GetMapping({"/admin/manage/user-detail"})
 	public String manageUserDetail() {
 		return "admin/manage/user-detail";
 	}
@@ -64,19 +71,19 @@ public class AdminController {
 	@GetMapping("/admin/general-information")
 	public String adminInformation(Model model) {
 		model.addAttribute("activePage", "info");
-		return "admin/general-information";
+		return "admin/tournament/general-information";
 	}
 
 	@GetMapping("/admin/team-list")
 	public String adminTeamList(Model model) {
 		model.addAttribute("activePage", "teams");
-		return "admin/team-list";
+		return "admin/tournament/team-list";
 	}
 
 	@GetMapping("/admin/match-history")
 	public String adminMatchHistory(Model model) {
 		model.addAttribute("activePage", "matches");
-		return "admin/match-history";
+		return "admin/tournament/match-history";
 	}
 
 }

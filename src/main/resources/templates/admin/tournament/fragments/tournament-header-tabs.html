@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <th:block th:fragment="headerTabs(activeTab, tournamentName)">
+      <div class="tournament__header">
+        <h1
+          class="tournament__title"
+          th:text="'CHI TIẾT GIẢI ĐẤU: ' + (${tournamentName} ?: 'Hutech mở rộng lần 31')"
+        >
+          CHI TIẾT GIẢI ĐẤU: Hutech mở rộng lần 31
+        </h1>
+        <a th:href="@{/admin/manage/tournament}" class="btn btn--dark tournament__back">Quay lại</a>
+      </div>
+
+      <div class="tabs">
+        <a th:href="@{/admin/general-information}" class="tab-link" th:classappend="${activeTab == 'info'} ? ' active' : ''">
+          Thông tin chung
+        </a>
+        <a th:href="@{/admin/team-list}" class="tab-link" th:classappend="${activeTab == 'teams'} ? ' active' : ''">
+          Danh sách đội
+        </a>
+        <a th:href="@{/admin/match-history}" class="tab-link" th:classappend="${activeTab == 'matches'} ? ' active' : ''">
+          Lịch thi đấu
+        </a>
+        <a th:href="@{/admin/tournament-bracket}" class="tab-link" th:classappend="${activeTab == 'bracket'} ? ' active' : ''">
+          Sơ đồ thi đấu
+        </a>
+      </div>
+    </th:block>
+  </body>
+</html>

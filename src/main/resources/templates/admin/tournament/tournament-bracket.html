@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/assets/css/admin.css?v=20260322_1}">
     <style>
         :root {
             --bg: #ffffff;
@@ -472,22 +473,18 @@
     </style>
 </head>
 <body>
-<div class="app" th:with="activePage='manage', activeSubPage='tournament'">
+<div class="app" th:with="activePage='manage', activeSubPage='tournament', activeTab='bracket'">
     <aside th:replace="~{admin/fragments_admin/sidebar :: sidebar}"></aside>
 
     <main class="content">
         <header th:replace="~{admin/fragments_admin/header :: header}"></header>
 
-        <h1 class="section-title">CHI TIẾT GIẢI ĐẤU: Hutech mở rộng lần 31</h1>
+        <div class="tournament-details" style="background-color: #e6ecec;">
+            <th:block
+              th:replace="~{admin/tournament/fragments/tournament-header-tabs :: headerTabs(${activeTab}, ${tournamentName})}"
+            ></th:block>
 
-        <div class="tournament-tabs">
-            <a th:href="@{/admin/general-information}" class="tournament-tab">Thông tin chung</a>
-            <a th:href="@{/admin/team-list}" class="tournament-tab">Danh sách đội</a>
-            <a th:href="@{/admin/match-history}" class="tournament-tab">Lịch thi đấu</a>
-            <a th:href="@{/admin/tournament-bracket}" class="tournament-tab tournament-tab--active">Sơ đồ thi đấu</a>
-        </div>
-
-        <div class="bracket-container">
+            <div class="bracket-container">
             <!-- Vòng Bán Kết -->
             <div class="round round--semis">
                 <div class="match-pair">
@@ -564,6 +561,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
 
         <footer th:replace="~{admin/fragments_admin/footer :: footer}"></footer>
