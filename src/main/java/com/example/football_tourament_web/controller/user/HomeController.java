@@ -1,10 +1,22 @@
 package com.example.football_tourament_web.controller.user;
 
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.example.football_tourament_web.model.dto.NewsItem;
+import com.example.football_tourament_web.service.CbsSportsNewsService;
 
 @Controller
 public class HomeController {
+	private final CbsSportsNewsService cbsSportsNewsService;
+
+	public HomeController(CbsSportsNewsService cbsSportsNewsService) {
+		this.cbsSportsNewsService = cbsSportsNewsService;
+	}
 
 	@GetMapping({"/", "/home"})
 	public String home() {
@@ -12,7 +24,31 @@ public class HomeController {
 	}
 
 	@GetMapping({"/tin-tuc", "/tin-tuc.html"})
-	public String news() {
+	public String news(@RequestParam(name = "page", defaultValue = "1") int page, Model model) {
+		int pageSize = 6;
+		List<NewsItem> allItems = cbsSportsNewsService.getHeadlines();
+
+		int totalItems = allItems.size();
+		int totalPages = Math.max(1, (int) Math.ceil(totalItems / (double) pageSize));
+		int currentPage = Math.min(Math.max(page, 1), totalPages);
+
+		int fromIndex = Math.min((currentPage - 1) * pageSize, totalItems);
+		int toIndex = Math.min(fromIndex + pageSize, totalItems);
+		List<NewsItem> pageItems = allItems.subList(fromIndex, toIndex);
+
+		int startPage = Math.max(1, currentPage - 2);
+		int endPage = Math.min(totalPages, currentPage + 2);
+		if (endPage - startPage + 1 < 5) {
+			endPage = Math.min(totalPages, startPage + 4);
+			startPage = Math.max(1, endPage - 4);
+		}
+
+		model.addAttribute("newsItems", pageItems);
+		model.addAttribute("currentPage", currentPage);
+		model.addAttribute("totalPages", totalPages);
+		model.addAttribute("startPage", startPage);
+		model.addAttribute("endPage", endPage);
+		model.addAttribute("hasNews", !allItems.isEmpty());
 		return "user/home/news";
 	}
 
