@@ -78,6 +78,7 @@ public class SecurityConfig {
 						"/ca-nhan/**",
 						"/thong-tin-doi",
 						"/thong-tin-doi.html",
+						"/thong-tin-doi/**",
 						"/lich-su-dang-ky",
 						"/lich-su-dang-ky.html",
 						"/lich-su-giao-dich",
