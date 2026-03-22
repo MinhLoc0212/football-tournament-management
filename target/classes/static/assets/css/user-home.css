@@ -378,6 +378,12 @@ a {
   font-weight: 700;
 }
 
+.contact-page .map.is-loaded {
+  border: 0;
+  display: block;
+  color: transparent;
+}
+
 .footer {
   position: relative;
   background: radial-gradient(circle at 18% -10%, rgba(255, 170, 23, 0.22), transparent 44%),
