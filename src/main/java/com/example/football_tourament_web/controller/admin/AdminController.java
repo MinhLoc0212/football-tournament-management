@@ -506,28 +506,19 @@ public class AdminController {
 	@GetMapping({"/admin/manage/user-detail"})
 	public String manageUserDetail(
 			@RequestParam(value = "userId", required = false) Long userId,
-			Model model
+			Model model,
+			RedirectAttributes redirectAttributes
 	) {
 		model.addAttribute("userId", userId);
 		if (userId == null) {
-			model.addAttribute("user", null);
-			model.addAttribute("registeredAt", "—");
-			model.addAttribute("roleLabel", "—");
-			model.addAttribute("statusLabel", "—");
-			model.addAttribute("teamName", "—");
-			model.addAttribute("hasTeam", false);
-			return "admin/manage/user-detail";
+			redirectAttributes.addFlashAttribute("userLockMessage", "Vui lòng chọn người dùng hợp lệ");
+			return "redirect:/admin/manage/user";
 		}
 
 		AppUser user = userService.findById(userId).orElse(null);
 		if (user == null) {
-			model.addAttribute("user", null);
-			model.addAttribute("registeredAt", "—");
-			model.addAttribute("roleLabel", "—");
-			model.addAttribute("statusLabel", "—");
-			model.addAttribute("teamName", "—");
-			model.addAttribute("hasTeam", false);
-			return "admin/manage/user-detail";
+			redirectAttributes.addFlashAttribute("userLockMessage", "Không tìm thấy người dùng");
+			return "redirect:/admin/manage/user";
 		}
 
 		var team = teamService.findCaptainTeam(userId).orElse(null);
