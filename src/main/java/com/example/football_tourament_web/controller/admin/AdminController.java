@@ -342,7 +342,7 @@ public class AdminController {
 	}
 
 	private Path resolveUploadDir(String folder) {
-		return Paths.get(System.getProperty("user.home"), ".football_tournament_web", "uploads", folder).toAbsolutePath().normalize();
+		return Paths.get("src", "main", "resources", "static", "uploads", folder).toAbsolutePath().normalize();
 	}
 
 
@@ -807,7 +807,7 @@ public class AdminController {
 
 			for (TournamentRegistration r : registrations) {
 				if (r == null) continue;
-				if (r.getStatus() == RegistrationStatus.REJECTED) continue;
+				if (r.getStatus() != RegistrationStatus.APPROVED) continue;
 				if (r.getTeam() == null || r.getTeam().getId() == null) continue;
 
 				Long teamId = r.getTeam().getId();
@@ -896,7 +896,7 @@ public class AdminController {
 
 			for (TournamentRegistration r : registrations) {
 				if (r == null) continue;
-				if (r.getStatus() == RegistrationStatus.REJECTED) continue;
+				if (r.getStatus() != RegistrationStatus.APPROVED) continue;
 				if (r.getTeam() == null || r.getTeam().getId() == null) continue;
 				Long teamId = r.getTeam().getId();
 				if (!seenTeamIds.contains(teamId)) continue;
@@ -1068,7 +1068,7 @@ public class AdminController {
 
 		for (TournamentRegistration r : registrations) {
 			if (r == null) continue;
-			if (r.getStatus() == RegistrationStatus.REJECTED) continue;
+			if (r.getStatus() != RegistrationStatus.APPROVED) continue;
 			if (r.getTeam() == null || r.getTeam().getId() == null) continue;
 			Long teamId = r.getTeam().getId();
 			if (seenTeamIds.contains(teamId)) continue;
@@ -1209,7 +1209,7 @@ public class AdminController {
 
 		for (TournamentRegistration registration : registrations) {
 			if (registration == null) continue;
-			if (registration.getStatus() == RegistrationStatus.REJECTED) continue;
+			if (registration.getStatus() != RegistrationStatus.APPROVED) continue;
 			if (registration.getTeam() == null || registration.getTeam().getId() == null) continue;
 			Long teamId = registration.getTeam().getId();
 			if (seenTeamIds.contains(teamId)) continue;
@@ -1649,7 +1649,7 @@ public class AdminController {
 
 		for (TournamentRegistration registration : registrations) {
 			if (registration == null) continue;
-			if (registration.getStatus() == RegistrationStatus.REJECTED) continue;
+			if (registration.getStatus() != RegistrationStatus.APPROVED) continue;
 			if (registration.getTeam() == null || registration.getTeam().getId() == null) continue;
 
 			Long teamId = registration.getTeam().getId();
