@@ -511,13 +511,11 @@ public class AdminController {
 	) {
 		model.addAttribute("userId", userId);
 		if (userId == null) {
-			redirectAttributes.addFlashAttribute("userLockMessage", "Vui lòng chọn người dùng hợp lệ");
 			return "redirect:/admin/manage/user";
 		}
 
 		AppUser user = userService.findById(userId).orElse(null);
 		if (user == null) {
-			redirectAttributes.addFlashAttribute("userLockMessage", "Không tìm thấy người dùng");
 			return "redirect:/admin/manage/user";
 		}
 
@@ -540,20 +538,14 @@ public class AdminController {
 			RedirectAttributes redirectAttributes
 	) {
 		if (userId == null) {
-			redirectAttributes.addFlashAttribute("userLockMessage", "Thiếu userId");
 			return "redirect:/admin/manage/user";
 		}
 		AppUser user = userService.findById(userId).orElse(null);
 		if (user == null) {
-			redirectAttributes.addFlashAttribute("userLockMessage", "Không tìm thấy người dùng");
 			return "redirect:/admin/manage/user";
 		}
 		UserStatus next = user.getStatus() == UserStatus.LOCKED ? UserStatus.ACTIVE : UserStatus.LOCKED;
 		userService.updateStatus(userId, next);
-		redirectAttributes.addFlashAttribute(
-				"userLockMessage",
-				next == UserStatus.LOCKED ? "Đã khóa tài khoản người dùng" : "Đã mở khóa tài khoản người dùng"
-		);
 		return "redirect:/admin/manage/user-detail?userId=" + userId;
 	}
 
