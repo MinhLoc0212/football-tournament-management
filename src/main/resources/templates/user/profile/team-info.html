@@ -337,7 +337,6 @@
                             <th>Giải</th>
                             <th>Đối thủ</th>
                             <th>Vòng</th>
-                            <th>Trạng thái</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -347,16 +346,9 @@
                             <td th:text="${r.tournamentName}">---</td>
                             <td th:text="${r.opponentName}">---</td>
                             <td th:text="${r.round}">---</td>
-                            <td>
-                              <span
-                                class="badge"
-                                th:classappend="${r.status == 'Sắp diễn ra'} ? 'badge--upcoming' : (${r.status == 'Đang diễn ra'} ? 'badge--live' : 'badge--finished')"
-                                th:text="${r.status}"
-                              >---</span>
-                            </td>
                           </tr>
                           <tr th:if="${scheduleRows == null or #lists.isEmpty(scheduleRows)}">
-                            <td colspan="6" class="team-table__empty">Chưa có trận nào.</td>
+                            <td colspan="5" class="team-table__empty">Chưa có trận nào.</td>
                           </tr>
                         </tbody>
                       </table>
@@ -422,7 +414,6 @@
                           <div class="season-item" th:each="c : ${seasonCards}">
                             <div class="season-item__name" th:text="${c.tournamentName}">---</div>
                             <div class="season-item__badges">
-                              <span class="badge" th:classappend="${c.statusClass}" th:text="${c.statusLabel}">---</span>
                               <span class="badge" th:classappend="${c.achievementClass}" th:text="${c.achievementLabel}">---</span>
                             </div>
                           </div>
