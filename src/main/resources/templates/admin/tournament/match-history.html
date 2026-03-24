@@ -442,6 +442,16 @@
             color: var(--muted);
         }
 
+        /* Unify table visuals for management pages */
+        .tournament-details .table {
+            background: #ffffff !important;
+            border: 1px solid rgba(17, 24, 39, 0.06) !important;
+        }
+        .tournament-details .table thead tr,
+        .tournament-details .table thead th {
+            background: rgba(243, 246, 249, 0.8) !important;
+        }
+
         @media (max-width: 1200px) {
             .metrics {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1283,7 +1293,7 @@
         <main class="content">
             <header th:replace="~{admin/fragments_admin/header :: header}"></header>
 
-            <div class="tournament-details" style="background-color: #e6ecec;">
+            <div class="tournament-details">
                 <th:block
                     th:replace="~{admin/tournament/fragments/tournament-header-tabs :: headerTabs(${activeTab}, ${tournamentId}, ${tournamentName})}">
                 </th:block>
