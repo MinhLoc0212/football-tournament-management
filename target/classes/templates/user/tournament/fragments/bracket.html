@@ -7,28 +7,32 @@
         </div>
 
         <div th:if="${!#lists.isEmpty(bracket.rounds)}" class="bracket-container">
+            <svg class="bracket-lines" aria-hidden="true"></svg>
             <!-- Dynamic Rounds -->
             <div th:each="round, iter : ${bracket.rounds}" 
                  class="bracket-column" 
-                 th:classappend="${round.roundName == 'Tứ kết' ? 'round-quarter' : (round.roundName == 'Bán kết' ? 'round-semi' : (round.roundName == 'Chung kết' ? 'round-final' : ''))}">
+                 th:attr="data-round-index=${iter.index}"
+                 th:classappend="${#strings.containsIgnoreCase(round.roundName, 'tứ kết') ? 'round-quarter' : (#strings.containsIgnoreCase(round.roundName, 'bán kết') ? 'round-semi' : (#strings.containsIgnoreCase(round.roundName, 'chung kết') ? 'round-final' : ''))}">
                 
                 <div class="bracket-round-title" th:text="${round.roundName}">Tứ kết</div>
 
                 <!-- Trophy icon for final -->
-                <div th:if="${round.roundName == 'Chung kết'}" class="trophy-final">🏆</div>
+                <div th:if="${#strings.containsIgnoreCase(round.roundName, 'chung kết')}" class="trophy-final">🏆</div>
 
-                <div th:if="${round.roundName != 'Chung kết'}" class="bracket-pair-wrapper">
+                <div th:if="${!#strings.containsIgnoreCase(round.roundName, 'chung kết')}" class="bracket-pair-wrapper">
                     <!-- Quarter Finals usually pairs matches for visual lines, for now just list matches -->
-                    <div th:each="m : ${round.matches}" class="bracket-match" style="margin-bottom: 30px;">
-                        <div class="bracket-team" th:classappend="${m.homeWinner()} ? 'bracket-winner'">
+                    <div th:each="m, mIter : ${round.matches}" class="bracket-match" th:attr="data-match-index=${mIter.index}" style="margin-bottom: 30px;">
+                        <div class="bracket-team" th:classappend="${m.homeScore != null and m.awayScore != null} ? (${m.homeWinner()} ? ' bracket-winner' : ' bracket-loser') : ''">
                             <div class="bracket-team-info">
+                                <span class="bracket-seed" th:text="${bracket.seedLabels[m.homeTeamName]}">T1</span>
                                 <div class="bracket-team-logo" th:text="${#strings.substring(m.homeTeamName, 0, 1).toUpperCase()}">M</div>
                                 <span class="bracket-team-name" th:text="${m.homeTeamName}">Man United</span>
                             </div>
                             <span class="bracket-score" th:classappend="${m.decidedByPenalties() and m.homeWinner()} ? ' pen-winner' : ''" th:text="${m.homeDisplayScore()}">3</span>
                         </div>
-                        <div class="bracket-team" th:classappend="${m.awayWinner()} ? 'bracket-winner'">
+                        <div class="bracket-team" th:classappend="${m.homeScore != null and m.awayScore != null} ? (${m.awayWinner()} ? ' bracket-winner' : ' bracket-loser') : ''">
                             <div class="bracket-team-info">
+                                <span class="bracket-seed" th:text="${bracket.seedLabels[m.awayTeamName]}">T2</span>
                                 <div class="bracket-team-logo" th:text="${#strings.substring(m.awayTeamName, 0, 1).toUpperCase()}">C</div>
                                 <span class="bracket-team-name" th:text="${m.awayTeamName}">Chelsea FC</span>
                             </div>
@@ -38,17 +42,19 @@
                 </div>
 
                 <!-- Special styling for Final match -->
-                <div th:if="${round.roundName == 'Chung kết'}" th:each="m : ${round.matches}" class="bracket-match">
+                <div th:if="${#strings.containsIgnoreCase(round.roundName, 'chung kết')}" th:each="m, mIter : ${round.matches}" class="bracket-match" th:attr="data-match-index=${mIter.index}">
                     <span class="final-badge">GRAND FINAL</span>
-                    <div class="bracket-team" th:classappend="${m.homeWinner()} ? 'bracket-winner'">
+                    <div class="bracket-team" th:classappend="${m.homeScore != null and m.awayScore != null} ? (${m.homeWinner()} ? ' bracket-winner-final' : ' bracket-loser') : ''">
                         <div class="bracket-team-info">
+                            <span class="bracket-seed" th:text="${bracket.seedLabels[m.homeTeamName]}">T1</span>
                             <div class="bracket-team-logo" th:text="${#strings.substring(m.homeTeamName, 0, 1).toUpperCase()}">M</div>
                             <span class="bracket-team-name" th:text="${m.homeTeamName}">Man United</span>
                         </div>
                         <span class="bracket-score" th:classappend="${m.decidedByPenalties() and m.homeWinner()} ? ' pen-winner' : ''" th:text="${m.homeDisplayScore()}">1</span>
                     </div>
-                    <div class="bracket-team" th:classappend="${m.awayWinner()} ? 'bracket-winner'">
+                    <div class="bracket-team" th:classappend="${m.homeScore != null and m.awayScore != null} ? (${m.awayWinner()} ? ' bracket-winner-final' : ' bracket-loser') : ''">
                         <div class="bracket-team-info">
+                            <span class="bracket-seed" th:text="${bracket.seedLabels[m.awayTeamName]}">T2</span>
                             <div class="bracket-team-logo" th:text="${#strings.substring(m.awayTeamName, 0, 1).toUpperCase()}">D</div>
                             <span class="bracket-team-name" th:text="${m.awayTeamName}">Dortmund</span>
                         </div>
@@ -58,4 +64,101 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (() => {
+            const container = document.querySelector('.bracket-container');
+            if (!container) return;
+            const svg = container.querySelector('svg.bracket-lines');
+            if (!svg) return;
+
+            const ns = 'http://www.w3.org/2000/svg';
+            const clearSvg = () => {
+                while (svg.firstChild) svg.removeChild(svg.firstChild);
+            };
+            const toLocal = rect => {
+                const base = container.getBoundingClientRect();
+                return {
+                    left: rect.left - base.left + container.scrollLeft,
+                    top: rect.top - base.top + container.scrollTop,
+                    right: rect.right - base.left + container.scrollLeft,
+                    midY: rect.top - base.top + container.scrollTop + rect.height / 2,
+                    midX: rect.left - base.left + container.scrollLeft + rect.width / 2
+                };
+            };
+            const stroke = 'rgba(0,0,0,0.16)';
+            const strokeWidth = 2;
+            const drawLine = (x1, y1, x2, y2) => {
+                const line = document.createElementNS(ns, 'line');
+                line.setAttribute('x1', String(x1));
+                line.setAttribute('y1', String(y1));
+                line.setAttribute('x2', String(x2));
+                line.setAttribute('y2', String(y2));
+                line.setAttribute('stroke', stroke);
+                line.setAttribute('stroke-width', String(strokeWidth));
+                line.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(line);
+            };
+            const drawSingle = (src, dst) => {
+                const midX = (src.right + dst.left) / 2;
+                drawLine(src.right, src.midY, midX, src.midY);
+                drawLine(midX, src.midY, midX, dst.midY);
+                drawLine(midX, dst.midY, dst.left, dst.midY);
+            };
+            const drawPair = (src1, src2, dst) => {
+                const maxRight = Math.max(src1.right, src2.right);
+                const preferredJoinX = maxRight + 34;
+                const joinX = Math.min(preferredJoinX, dst.left - 34);
+                const joinY = (src1.midY + src2.midY) / 2;
+
+                drawLine(src1.right, src1.midY, joinX, src1.midY);
+                drawLine(src2.right, src2.midY, joinX, src2.midY);
+                drawLine(joinX, Math.min(src1.midY, src2.midY), joinX, Math.max(src1.midY, src2.midY));
+                drawLine(joinX, joinY, dst.left, dst.midY);
+            };
+
+            const redraw = () => {
+                const w = Math.max(container.scrollWidth, container.clientWidth);
+                const h = Math.max(container.scrollHeight, container.clientHeight);
+                svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+                svg.style.width = `${w}px`;
+                svg.style.height = `${h}px`;
+                clearSvg();
+
+                const cols = Array.from(container.querySelectorAll('.bracket-column'));
+                const rounds = cols.map(col => Array.from(col.querySelectorAll('.bracket-match')));
+                for (let r = 0; r < rounds.length - 1; r++) {
+                    const curr = rounds[r];
+                    const next = rounds[r + 1];
+                    if (!curr.length || !next.length) continue;
+                    for (let j = 0; j < next.length; j++) {
+                        const targetEl = next[j];
+                        const a1El = curr[j * 2];
+                        const a2El = curr[j * 2 + 1];
+                        if (!targetEl || !a1El) continue;
+
+                        const dst = toLocal(targetEl.getBoundingClientRect());
+                        const src1 = toLocal(a1El.getBoundingClientRect());
+                        if (!a2El) {
+                            drawSingle(src1, dst);
+                            continue;
+                        }
+                        const src2 = toLocal(a2El.getBoundingClientRect());
+                        drawPair(src1, src2, dst);
+                    }
+                }
+            };
+
+            const scheduleRedraw = () => {
+                window.requestAnimationFrame(() => {
+                    redraw();
+                });
+            };
+
+            window.addEventListener('resize', scheduleRedraw);
+            container.addEventListener('scroll', scheduleRedraw);
+            setTimeout(scheduleRedraw, 30);
+            setTimeout(scheduleRedraw, 200);
+        })();
+    </script>
 </div>
