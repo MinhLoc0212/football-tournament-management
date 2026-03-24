@@ -43,6 +43,22 @@ public interface TournamentRegistrationRepository extends JpaRepository<Tourname
 			@Param("status") RegistrationStatus status
 	);
 
+<<<<<<< Updated upstream
+=======
+	@Query("""
+			select r
+			from TournamentRegistration r
+			join fetch r.team tm
+			left join fetch tm.captain c
+			where r.tournament.id = :tournamentId and r.status = :status
+			order by r.createdAt asc
+			""")
+	List<TournamentRegistration> findByTournamentIdWithTeamAndStatus(
+			@Param("tournamentId") Long tournamentId,
+			@Param("status") RegistrationStatus status
+	);
+
+>>>>>>> Stashed changes
 	List<TournamentRegistration> findByRegisteredByIdOrderByCreatedAtDesc(Long userId);
 
 	Optional<TournamentRegistration> findByTournamentIdAndTeamId(Long tournamentId, Long teamId);
