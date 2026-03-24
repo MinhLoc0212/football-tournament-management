@@ -106,8 +106,11 @@ a {
   gap: 24px;
 }
 
-.brand { display: flex; align-items: center; }
-.brand img { height: 36px; display: block; }
+.brand {
+  font-weight: 700;
+  font-size: 35px;
+  letter-spacing: 0.2px;
+}
 
 .nav {
   display: flex;
