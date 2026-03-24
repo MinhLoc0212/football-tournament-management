@@ -966,6 +966,7 @@ public class AdminController {
 				if (hasAnyGroupMatch && allGroupMatchesFinished && !knockoutExists) {
 					boolean created = matchService.generateQuarterFinalsFromGroupsIfReady(id);
 					if (created) {
+						List<Match> refreshed = updateMatchStatusesByTime(matchService.listByTournamentIdWithDetails(id));
 						List<Match> refreshedKnockout = new ArrayList<>();
 						for (Match m : refreshed) {
 							if (m == null || m.getRoundName() == null) continue;
@@ -1061,6 +1062,7 @@ public class AdminController {
 		return "admin/tournament/match-history";
 	}
 
+	private List<Match> updateMatchStatusesByTime(List<Match> matches) {
 		if (matches == null || matches.isEmpty()) return matches;
 		LocalDateTime now = LocalDateTime.now();
 		List<Match> toUpdate = new ArrayList<>();
