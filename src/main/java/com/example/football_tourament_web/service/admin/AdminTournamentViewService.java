@@ -70,7 +70,7 @@ public class AdminTournamentViewService {
 		semisRaw.sort(Comparator.comparing(Match::getId));
 
 		Map<String, String> seedLabels = new HashMap<>();
-		for (Match m : semisRaw) {
+		for (Match m : knockoutMatches) {
 			String homeName = m.getHomeTeam() != null ? m.getHomeTeam().getName() : null;
 			String awayName = m.getAwayTeam() != null ? m.getAwayTeam().getName() : null;
 			if (homeName != null && !homeName.isBlank() && !seedLabels.containsKey(homeName)) {

@@ -442,6 +442,16 @@
             color: var(--muted);
         }
 
+        /* Unify table visuals for management pages */
+        .tournament-details .table {
+            background: #ffffff !important;
+            border: 1px solid rgba(17, 24, 39, 0.06) !important;
+        }
+        .tournament-details .table thead tr,
+        .tournament-details .table thead th {
+            background: rgba(243, 246, 249, 0.8) !important;
+        }
+
         @media (max-width: 1200px) {
             .metrics {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1283,7 +1293,7 @@
         <main class="content">
             <header th:replace="~{admin/fragments_admin/header :: header}"></header>
 
-            <div class="tournament-details" style="background-color: #e6ecec;">
+            <div class="tournament-details">
                 <th:block
                     th:replace="~{admin/tournament/fragments/tournament-header-tabs :: headerTabs(${activeTab}, ${tournamentId}, ${tournamentName})}">
                 </th:block>
@@ -1779,34 +1789,42 @@
                         <input type="hidden" name="matchId" th:value="${selectedMatch != null ? selectedMatch.id : ''}">
                         <input type="hidden" name="page" th:value="${currentPage}">
                         <input type="hidden" name="size" th:value="${pageSize}">
+                        <input type="hidden" id="matchScheduledFlag" th:value="${selectedMatch != null && selectedMatch.scheduledAt != null ? '1' : '0'}">
 
                         <input name="homeScore" class="score-box" type="number" min="0" max="99" style="line-height: normal;"
+                               th:attr="disabled=${selectedMatch != null && selectedMatch.scheduledAt == null} ? 'disabled' : null"
                                th:value="${selectedMatch != null && selectedMatch.homeScore != null ? selectedMatch.homeScore : ''}">
                         <span style="font-size: 24px; color: #999;">-</span>
                         <input name="awayScore" class="score-box" type="number" min="0" max="99" style="line-height: normal;"
+                               th:attr="disabled=${selectedMatch != null && selectedMatch.scheduledAt == null} ? 'disabled' : null"
                                th:value="${selectedMatch != null && selectedMatch.awayScore != null ? selectedMatch.awayScore : ''}">
+                        <div class="team-name" style="color: var(--brand); font-size: 22px; margin-left: 10px;"
+                             th:text="${selectedMatch != null && selectedMatch.awayTeam != null ? selectedMatch.awayTeam.name : ''}"></div>
                         
                         <div style="display:flex; align-items:center; gap:6px; margin-left: 6px;"
                              th:if="${tournamentMode != T(com.example.football_tourament_web.model.enums.TournamentMode).GROUP_STAGE and selectedMatch != null and selectedMatch.homeScore != null and selectedMatch.awayScore != null and selectedMatch.homeScore == selectedMatch.awayScore} 
                                     or ${selectedMatch != null and (selectedMatch.homePenalty != null or selectedMatch.awayPenalty != null)}">
                             <span class="muted" style="font-weight:700;">Pen</span>
                             <input name="homePen" class="score-box" type="number" min="0" max="30" style="width: 55px; height: 36px; font-size:18px;"
+                                   th:attr="disabled=${selectedMatch != null && selectedMatch.scheduledAt == null} ? 'disabled' : null"
                                    th:value="${selectedMatch != null && selectedMatch.homePenalty != null ? selectedMatch.homePenalty : ''}">
                             <span style="font-size: 18px; color: #999;">-</span>
                             <input name="awayPen" class="score-box" type="number" min="0" max="30" style="width: 55px; height: 36px; font-size:18px;"
+                                   th:attr="disabled=${selectedMatch != null && selectedMatch.scheduledAt == null} ? 'disabled' : null"
                                    th:value="${selectedMatch != null && selectedMatch.awayPenalty != null ? selectedMatch.awayPenalty : ''}">
                         </div>
-                        <button type="submit" class="btn btn--brand btn--sm" style="margin-left: 10px;">Lưu tỉ số</button>
+                        <button type="submit" class="btn btn--brand btn--sm" style="margin-left: 10px;"
+                                th:attr="disabled=${selectedMatch != null && selectedMatch.scheduledAt == null} ? 'disabled' : null">Lưu tỉ số</button>
+                        <label style="display:flex; align-items:center; gap:6px; margin-left: 6px;">
+                            <input type="checkbox" name="finalize" value="true">
+                            <span class="muted">Đánh dấu hoàn thành</span>
+                        </label>
                     </form>
-                    <div class="team-name" style="color: var(--brand); font-size: 22px;"
-                         th:text="${selectedMatch != null && selectedMatch.awayTeam != null ? selectedMatch.awayTeam.name : ''}"></div>
                 </div>
 
-                <div class="match-meta-status"
-                    style="text-align: center; margin-bottom: 15px; color: #6b7280; font-size: 14px;">
-                    <span th:if="${selectedMatch != null && selectedMatch.status != null}"
-                          th:text="'Trạng thái: ' + ${selectedMatch.status == T(com.example.football_tourament_web.model.enums.MatchStatus).FINISHED ? 'Hoàn thành' : (selectedMatch.status == T(com.example.football_tourament_web.model.enums.MatchStatus).LIVE ? 'Đang diễn ra' : 'Sắp diễn ra')}"></span>
-                </div>
+                    <div th:if="${selectedMatch != null && selectedMatch.scheduledAt == null}" class="muted" style="text-align:center; margin-bottom: 15px; font-size: 14px;">
+                        Đặt ngày giờ thi đấu trước khi cập nhật tỉ số.
+                    </div>
 
                 <div class="match-tab-header">
                     <div class="match-tab-btn" data-match-tab="lineup"
@@ -2368,6 +2386,12 @@
             const modeValue = document.getElementById('tournamentModeName') ? document.getElementById('tournamentModeName').value : '';
             const isKnockout = modeValue !== 'GROUP_STAGE';
             if (!isKnockout || !formEl) return true;
+
+            const sched = document.getElementById('matchScheduledFlag');
+            if (sched && sched.value !== '1') {
+                if (window.showToast) window.showToast('Hãy đặt ngày và giờ thi đấu trước khi cập nhật tỉ số', 'error');
+                return false;
+            }
 
             const homeScore = formEl.querySelector('input[name="homeScore"]');
             const awayScore = formEl.querySelector('input[name="awayScore"]');

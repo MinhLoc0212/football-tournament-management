@@ -706,18 +706,18 @@
     <main class="content">
         <header th:replace="~{admin/fragments_admin/header :: header}"></header>
 
-        <div class="tournament-details" style="background-color: #e6ecec;">
+        <div class="tournament-details">
             <th:block
               th:replace="~{admin/tournament/fragments/tournament-header-tabs :: headerTabs(${activeTab}, ${tournamentId}, ${tournamentName})}"
             ></th:block>
 
-            <table class="table" style="background: transparent; border: none;">
+            <table class="table">
                 <thead>
-                    <tr style="background: transparent;">
-                        <th style="width: 50px; background: transparent;">#</th>
-                        <th style="background: transparent;">Tên đội</th>
-                        <th style="background: transparent;">Thành viên</th>
-                        <th style="text-align: center; background: transparent;">Hành động</th>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Tên đội</th>
+                        <th>Thành viên</th>
+                        <th style="text-align: center;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
