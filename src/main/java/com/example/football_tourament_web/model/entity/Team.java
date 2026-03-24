@@ -17,15 +17,21 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "teams")
+@Table(
+		name = "teams",
+		uniqueConstraints = {
+				@UniqueConstraint(name = "uk_teams_captain_name", columnNames = {"captain_user_id", "name"})
+		}
+)
 public class Team {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false, unique = true)
+	@Column(nullable = false)
 	private String name;
 
 	private String logoUrl;

@@ -152,23 +152,8 @@ public class UserTeamService {
 		return "user/profile/team-info";
 	}
 
-	public String createTeam(
-			@Valid TeamCreateForm teamForm,
-			BindingResult bindingResult,
-			MultipartFile teamLogo,
-			List<String> memberNames,
-			List<Integer> memberJerseys,
-			MultipartFile[] memberAvatars,
-			Authentication authentication,
-			Model model
-	) {
-		// Tạo team + thêm members cần chạy trong transaction để đảm bảo tính nhất quán
-		// và tránh lỗi remove/save ngoài transaction khi repository sử dụng thao tác write
-		return createTeamTx(teamForm, bindingResult, teamLogo, memberNames, memberJerseys, memberAvatars, authentication, model);
-	}
-
 	@Transactional
-	protected String createTeamTx(
+	public String createTeam(
 			@Valid TeamCreateForm teamForm,
 			BindingResult bindingResult,
 			MultipartFile teamLogo,
@@ -188,18 +173,18 @@ public class UserTeamService {
 		}
 
 		if (bindingResult.hasErrors()) {
-			return renderCreateTeamError(model, user, teamForm);
+			return renderCreateTeamError(model, user, teamForm, bindingResult);
 		}
 
 		String name = teamForm.teamName == null ? "" : teamForm.teamName.trim();
 		if (name.isBlank()) {
 			bindingResult.rejectValue("teamName", "teamName.blank", "Vui lòng nhập tên đội");
-			return renderCreateTeamError(model, user, teamForm);
+			return renderCreateTeamError(model, user, teamForm, bindingResult);
 		}
 
 		if (teamService.findByName(name).isPresent()) {
-			bindingResult.rejectValue("teamName", "teamName.exists", "Tên đội đã tồn tại");
-			return renderCreateTeamError(model, user, teamForm);
+			bindingResult.rejectValue("teamName", "teamName.exists", "Đã có đội với tên này, vui lòng đặt tên khác");
+			return renderCreateTeamError(model, user, teamForm, bindingResult);
 		}
 
 		String logoUrl = null;
@@ -255,25 +240,8 @@ public class UserTeamService {
 		return "redirect:/thong-tin-doi?teamId=" + team.getId();
 	}
 
-	public String updateTeam(
-			Long teamId,
-			@Valid TeamCreateForm teamForm,
-			BindingResult bindingResult,
-			String existingLogoUrl,
-			MultipartFile teamLogo,
-			List<String> memberNames,
-			List<Integer> memberJerseys,
-			List<String> existingMemberAvatars,
-			MultipartFile[] memberAvatars,
-			Authentication authentication,
-			Model model
-	) {
-		// Cập nhật team + thay thế toàn bộ thành viên cần transaction để xử lý delete + save atomically
-		return updateTeamTx(teamId, teamForm, bindingResult, existingLogoUrl, teamLogo, memberNames, memberJerseys, existingMemberAvatars, memberAvatars, authentication, model);
-	}
-
 	@Transactional
-	protected String updateTeamTx(
+	public String updateTeam(
 			Long teamId,
 			@Valid TeamCreateForm teamForm,
 			BindingResult bindingResult,
@@ -299,19 +267,19 @@ public class UserTeamService {
 		Team team = teamOpt.get();
 
 		if (bindingResult.hasErrors()) {
-			return renderEditTeamError(model, user, team, teamForm);
+			return renderEditTeamError(model, user, team, teamForm, bindingResult);
 		}
 
 		String name = teamForm.teamName == null ? "" : teamForm.teamName.trim();
 		if (name.isBlank()) {
 			bindingResult.rejectValue("teamName", "teamName.blank", "Vui lòng nhập tên đội");
-			return renderEditTeamError(model, user, team, teamForm);
+			return renderEditTeamError(model, user, team, teamForm, bindingResult);
 		}
 
 		var existingByName = teamService.findByName(name);
 		if (existingByName.isPresent() && !existingByName.get().getId().equals(team.getId())) {
-			bindingResult.rejectValue("teamName", "teamName.exists", "Tên đội đã tồn tại");
-			return renderEditTeamError(model, user, team, teamForm);
+			bindingResult.rejectValue("teamName", "teamName.exists", "Đã có đội với tên này, vui lòng đặt tên khác");
+			return renderEditTeamError(model, user, team, teamForm, bindingResult);
 		}
 
 		String nextLogoUrl = existingLogoUrl;
@@ -370,7 +338,7 @@ public class UserTeamService {
 		return "redirect:/thong-tin-doi?teamId=" + team.getId();
 	}
 
-	private String renderCreateTeamError(Model model, AppUser user, TeamCreateForm teamForm) {
+	private String renderCreateTeamError(Model model, AppUser user, TeamCreateForm teamForm, BindingResult bindingResult) {
 		attachCommonProfileModel(model, user);
 		List<TeamCardView> teams = teamService.listByCaptain(user.getId()).stream()
 				.map(t -> new TeamCardView(
@@ -385,11 +353,12 @@ public class UserTeamService {
 		model.addAttribute("isCreate", true);
 		model.addAttribute("isEdit", false);
 		model.addAttribute("teamForm", teamForm);
+		model.addAttribute("org.springframework.validation.BindingResult.teamForm", bindingResult);
 		ensureMemberSlots(model, List.of());
 		return "user/profile/team-info";
 	}
 
-	private String renderEditTeamError(Model model, AppUser user, Team team, TeamCreateForm teamForm) {
+	private String renderEditTeamError(Model model, AppUser user, Team team, TeamCreateForm teamForm, BindingResult bindingResult) {
 		attachCommonProfileModel(model, user);
 		List<TeamCardView> teams = teamService.listByCaptain(user.getId()).stream()
 				.map(t -> new TeamCardView(
@@ -408,6 +377,7 @@ public class UserTeamService {
 		model.addAttribute("isEdit", true);
 		model.addAttribute("editTeamId", team.getId());
 		model.addAttribute("teamForm", teamForm);
+		model.addAttribute("org.springframework.validation.BindingResult.teamForm", bindingResult);
 		ensureMemberSlots(model, members);
 		return "user/profile/team-info";
 	}
