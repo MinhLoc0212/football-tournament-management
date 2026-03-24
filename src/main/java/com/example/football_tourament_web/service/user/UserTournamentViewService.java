@@ -626,69 +626,77 @@ public class UserTournamentViewService {
 	@Transactional(readOnly = true)
 	public ChartsView buildChartsData(Long tournamentId, Long selectedTeamId) {
 		if (tournamentId == null) return ChartsView.none();
-		var events = matchEventRepository.findByTournamentId(tournamentId);
 		var matches = matchService.listByTournamentIdWithDetails(tournamentId);
 
-		Map<String, Integer> goalsByTeam = new HashMap<>();
-		for (var event : events) {
-			if (event.getType() == com.example.football_tourament_web.model.enums.MatchEventType.GOAL && event.getPlayer() != null && event.getPlayer().getTeam() != null) {
-				String teamName = event.getPlayer().getTeam().getName();
-				goalsByTeam.put(teamName, goalsByTeam.getOrDefault(teamName, 0) + 1);
+		Long teamId = selectedTeamId;
+		String teamName = null;
+		if (teamId == null) {
+			List<TeamCardView> teams = buildTournamentTeams(tournamentId);
+			if (!teams.isEmpty() && teams.get(0) != null) {
+				teamId = teams.get(0).teamId();
+				teamName = teams.get(0).teamName();
 			}
+		}
+		if (teamId == null) return ChartsView.none();
+		if (teamName == null) {
+			teamName = teamService.findById(teamId).map(com.example.football_tourament_web.model.entity.Team::getName).orElse("—");
 		}
 
-		Map<String, Integer> topScorers = new HashMap<>();
-		for (var event : events) {
-			if (event.getType() == com.example.football_tourament_web.model.enums.MatchEventType.GOAL && event.getPlayer() != null) {
-				String playerName = event.getPlayer().getFullName();
-				topScorers.put(playerName, topScorers.getOrDefault(playerName, 0) + 1);
-			}
-		}
-		var sortedScorers = topScorers.entrySet().stream()
-				.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-				.limit(5)
+		final Long teamIdFinal = teamId;
+		final String teamNameFinal = teamName;
+
+		var sortedMatches = matches.stream()
+				.filter(m -> m != null && m.getHomeTeam() != null && m.getAwayTeam() != null
+						&& m.getHomeTeam().getId() != null && m.getAwayTeam().getId() != null)
+				.filter(m -> teamIdFinal.equals(m.getHomeTeam().getId()) || teamIdFinal.equals(m.getAwayTeam().getId()))
+				.sorted(Comparator
+						.comparing((Match m) -> m.getScheduledAt() == null ? LocalDateTime.MAX : m.getScheduledAt())
+						.thenComparing(m -> m.getId() == null ? Long.MAX_VALUE : m.getId()))
 				.toList();
 
-		Map<String, Integer> goalsByRound = new HashMap<>();
-		for (var match : matches) {
-			if (match.getRoundName() == null) continue;
-			int totalGoals = (match.getHomeScore() != null ? match.getHomeScore() : 0) + (match.getAwayScore() != null ? match.getAwayScore() : 0);
-			goalsByRound.put(match.getRoundName(), goalsByRound.getOrDefault(match.getRoundName(), 0) + totalGoals);
-		}
-		var sortedRounds = goalsByRound.entrySet().stream()
-				.sorted(Map.Entry.comparingByKey())
-				.toList();
+		int win = 0;
+		int draw = 0;
+		int loss = 0;
+		List<String> matchLabels = new ArrayList<>();
+		List<Integer> goalsForByMatch = new ArrayList<>();
 
-		List<RadarDataset> radarDatasets = new ArrayList<>();
-		if (selectedTeamId != null) {
-			teamService.findById(selectedTeamId).ifPresent(team -> {
-				RadarDataset ds = calculateTeamRadarStats(team, matches, events);
-				radarDatasets.add(ds);
-			});
-		} else {
-			var schedule = buildScheduleView(tournamentId);
-			if (schedule != null && schedule.groupTeams() != null) {
-				schedule.groupTeams().values().stream()
-						.flatMap(List::stream)
-						.sorted(Comparator.comparingInt(GroupTeamRow::points).reversed())
-						.limit(2)
-						.forEach(teamRow -> {
-							teamService.findById(teamRow.teamId()).ifPresent(team -> {
-								radarDatasets.add(calculateTeamRadarStats(team, matches, events));
-							});
-						});
+		for (Match m : sortedMatches) {
+			Integer hs = m.getHomeScore();
+			Integer as = m.getAwayScore();
+			boolean hasScore = hs != null && as != null;
+			if (!hasScore) continue;
+
+			boolean isHome = teamIdFinal.equals(m.getHomeTeam().getId());
+			boolean isAway = teamIdFinal.equals(m.getAwayTeam().getId());
+			if (!isHome && !isAway) continue;
+
+			int gf = isHome ? hs : as;
+			goalsForByMatch.add(gf);
+
+			String round = (m.getRoundName() == null || m.getRoundName().isBlank()) ? "Trận" : m.getRoundName().trim();
+			String opponent = isHome ? m.getAwayTeam().getName() : m.getHomeTeam().getName();
+			if (opponent == null || opponent.isBlank()) opponent = "—";
+			matchLabels.add(round + " vs " + opponent);
+
+			int cmp = Integer.compare(hs, as);
+			if (cmp == 0) {
+				Integer hp = m.getHomePenalty();
+				Integer ap = m.getAwayPenalty();
+				if (hp != null && ap != null && !hp.equals(ap)) {
+					boolean homeWin = hp > ap;
+					boolean teamWin = (isHome && homeWin) || (isAway && !homeWin);
+					if (teamWin) win++; else loss++;
+				} else {
+					draw++;
+				}
+			} else {
+				boolean homeWin = cmp > 0;
+				boolean teamWin = (isHome && homeWin) || (isAway && !homeWin);
+				if (teamWin) win++; else loss++;
 			}
 		}
 
-		return new ChartsView(
-				goalsByTeam.keySet().stream().toList(),
-				goalsByTeam.values().stream().toList(),
-				sortedScorers.stream().map(Map.Entry::getKey).toList(),
-				sortedScorers.stream().map(Map.Entry::getValue).toList(),
-				sortedRounds.stream().map(Map.Entry::getKey).toList(),
-				sortedRounds.stream().map(Map.Entry::getValue).toList(),
-				radarDatasets
-		);
+		return new ChartsView(teamIdFinal, teamNameFinal, win, draw, loss, matchLabels, goalsForByMatch);
 	}
 
 	private RadarDataset calculateTeamRadarStats(com.example.football_tourament_web.model.entity.Team team, List<Match> allMatches, List<MatchEvent> allEvents) {
@@ -731,24 +739,61 @@ public class UserTournamentViewService {
 		if (tournamentId == null) return BracketView.none();
 		List<Match> allMatches = matchService.listByTournamentIdWithDetails(tournamentId);
 
-		Map<String, List<MatchRow>> matchesByRound = new HashMap<>();
-		for (var match : allMatches) {
-			if (match.getRoundName() == null) continue;
-			String round = match.getRoundName().trim();
-			if (round.contains("Bảng")) continue;
+		List<Match> knockoutMatches = allMatches.stream()
+				.filter(m -> m != null && m.getRoundName() != null)
+				.filter(m -> {
+					String r = m.getRoundName().trim();
+					return !r.startsWith("Bảng ");
+				})
+				.toList();
 
+		Map<String, String> seedLabels = new HashMap<>();
+		knockoutMatches.stream()
+				.sorted(Comparator
+						.comparing((Match m) -> bracketRoundPriority(m.getRoundName()))
+						.thenComparing(m -> m.getId() == null ? Long.MAX_VALUE : m.getId()))
+				.forEach(m -> {
+					String home = m.getHomeTeam() != null ? m.getHomeTeam().getName() : null;
+					String away = m.getAwayTeam() != null ? m.getAwayTeam().getName() : null;
+					if (home != null && !home.isBlank() && !seedLabels.containsKey(home)) {
+						seedLabels.put(home, "T" + (seedLabels.size() + 1));
+					}
+					if (away != null && !away.isBlank() && !seedLabels.containsKey(away)) {
+						seedLabels.put(away, "T" + (seedLabels.size() + 1));
+					}
+				});
+
+		Map<String, List<MatchRow>> matchesByRound = new HashMap<>();
+		for (Match match : knockoutMatches) {
+			String round = match.getRoundName().trim();
 			matchesByRound.computeIfAbsent(round, k -> new ArrayList<>()).add(toMatchRow(match));
 		}
 
-		List<BracketRound> rounds = new ArrayList<>();
-		List<String> roundOrder = List.of("Tứ kết", "Bán kết", "Chung kết");
-		for (String roundName : roundOrder) {
-			if (matchesByRound.containsKey(roundName)) {
-				rounds.add(new BracketRound(roundName, matchesByRound.get(roundName)));
-			}
-		}
+		List<BracketRound> rounds = matchesByRound.entrySet().stream()
+				.sorted(Comparator
+						.comparingInt((Map.Entry<String, List<MatchRow>> e) -> bracketRoundPriority(e.getKey()))
+						.thenComparing(Map.Entry::getKey))
+				.map(e -> {
+					var list = new ArrayList<>(e.getValue());
+					list.sort(Comparator
+							.comparing((MatchRow m) -> m.scheduledAt() == null ? LocalDateTime.MAX : m.scheduledAt())
+							.thenComparing(m -> m.id() == null ? Long.MAX_VALUE : m.id()));
+					return new BracketRound(e.getKey(), list);
+				})
+				.toList();
 
-		return new BracketView(rounds);
+		return new BracketView(seedLabels, rounds);
+	}
+
+	private static int bracketRoundPriority(String roundName) {
+		if (roundName == null) return 999;
+		String r = roundName.trim().toLowerCase();
+		if (r.contains("vòng 16") || r.contains("1/8") || r.contains("vòng 1/8")) return 10;
+		if (r.contains("tứ kết") || r.contains("quarter")) return 20;
+		if (r.contains("bán kết") || r.contains("semi")) return 30;
+		if (r.contains("chung kết") || r.contains("final")) return 40;
+		if (r.contains("tranh hạng 3") || r.contains("hạng 3")) return 50;
+		return 900;
 	}
 
 	@Transactional(readOnly = true)
@@ -1136,14 +1181,55 @@ public class UserTournamentViewService {
 		}
 	}
 
-	public record ChartsView(
-			List<String> teamLabels, List<Integer> teamGoals,
-			List<String> topScorerLabels, List<Integer> topScorerGoals,
-			List<String> roundLabels, List<Integer> roundGoals,
-			List<RadarDataset> radarDatasets
-	) {
+	public static final class ChartsView {
+		private final Long teamId;
+		private final String teamName;
+		private final int win;
+		private final int draw;
+		private final int loss;
+		private final List<String> matchLabels;
+		private final List<Integer> goalsForByMatch;
+
+		public ChartsView(Long teamId, String teamName, int win, int draw, int loss, List<String> matchLabels, List<Integer> goalsForByMatch) {
+			this.teamId = teamId;
+			this.teamName = teamName;
+			this.win = win;
+			this.draw = draw;
+			this.loss = loss;
+			this.matchLabels = matchLabels == null ? List.of() : matchLabels;
+			this.goalsForByMatch = goalsForByMatch == null ? List.of() : goalsForByMatch;
+		}
+
 		public static ChartsView none() {
-			return new ChartsView(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+			return new ChartsView(null, null, 0, 0, 0, List.of(), List.of());
+		}
+
+		public Long getTeamId() {
+			return teamId;
+		}
+
+		public String getTeamName() {
+			return teamName;
+		}
+
+		public int getWin() {
+			return win;
+		}
+
+		public int getDraw() {
+			return draw;
+		}
+
+		public int getLoss() {
+			return loss;
+		}
+
+		public List<String> getMatchLabels() {
+			return matchLabels;
+		}
+
+		public List<Integer> getGoalsForByMatch() {
+			return goalsForByMatch;
 		}
 	}
 
@@ -1151,9 +1237,9 @@ public class UserTournamentViewService {
 
 	public record BracketRound(String roundName, List<MatchRow> matches) {}
 
-	public record BracketView(List<BracketRound> rounds) {
+	public record BracketView(Map<String, String> seedLabels, List<BracketRound> rounds) {
 		public static BracketView none() {
-			return new BracketView(List.of());
+			return new BracketView(Map.of(), List.of());
 		}
 	}
 

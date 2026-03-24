@@ -14,11 +14,13 @@
     --line: rgba(0, 0, 0, 0.14);
 
     display: grid;
-    grid-template-columns: 280px 280px 280px;
+    grid-auto-flow: column;
+    grid-auto-columns: 280px;
     gap: 72px;
     padding: 18px 20px 26px;
     min-width: 980px;
     justify-content: center;
+    position: relative;
 }
 
 .bracket-column {
@@ -142,8 +144,28 @@
     text-align: right;
 }
 
-.bracket-winner .bracket-team-name {
-    color: #e8b931;
+.bracket-seed {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    min-width: 28px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    color: #111;
+}
+
+.bracket-winner { background: #bbf7d0; }
+.bracket-loser { background: #fecaca; }
+.bracket-winner-final { background: #facc15; }
+
+.bracket-winner .bracket-team-name,
+.bracket-winner-final .bracket-team-name {
+    color: #171717;
 }
 
 .pen-winner {
@@ -155,6 +177,26 @@
     display: grid;
     gap: var(--match-gap);
     position: relative;
+}
+
+.bracket-match::before,
+.bracket-match::after,
+.bracket-pair::before {
+    content: none !important;
+    display: none !important;
+}
+
+.bracket-lines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.bracket-column,
+.bracket-match {
+    position: relative;
+    z-index: 2;
 }
 
 .round-quarter .bracket-pair::before,

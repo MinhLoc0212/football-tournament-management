@@ -2,181 +2,137 @@
     <link rel="stylesheet" th:href="@{/assets/css/tournament-fragment-standing.css}">
 
     <div class="standing-section">
-        <div th:if="${scheduleMode != 'GROUP_STAGE'}" class="alert alert-info">
-            Giải đấu không có vòng bảng nên không có bảng xếp hạng.
-        </div>
-
-        <div th:if="${scheduleMode == 'GROUP_STAGE'}" style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: space-between;">
-            <div class="group-standing-container" style="flex: 1 1 calc(50% - 15px); min-width: 400px; box-sizing: border-box;" th:with="groupKey='A'">
+        <div style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: space-between;">
+            <div class="group-standing-container" style="flex: 1 1 calc(50% - 15px); min-width: 400px; box-sizing: border-box;">
                 <h3 class="group-title" style="margin-bottom: 15px; font-weight: 600; color: #171717;">Bảng A</h3>
-                <div class="standing-table-container">
+                <!-- bảng cũ đã bỏ -->
+                <div class="standing-table-container" style="margin-top: 16px;">
                     <table class="standing-table">
                         <thead>
-                            <tr>
-                                <th style="width: 5%;">#</th>
-                                <th>CLB</th>
-                                <th style="width: 5%;">Tr</th>
-                                <th style="width: 5%;">T</th>
-                                <th style="width: 5%;">H</th>
-                                <th style="width: 5%;">B</th>
-                                <th style="width: 8%;">HS</th>
-                                <th style="width: 8%;">Đ</th>
-                            </tr>
+                        <tr>
+                            <th style="width: 6%;">STT</th>
+                            <th>Đội</th>
+                            <th style="width: 10%;">Thành viên</th>
+                            <th style="width: 10%;">Điểm</th>
+                            <th style="width: 10%;">BT</th>
+                            <th style="width: 10%;">BB</th>
+                            <th style="width: 10%;">HS</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr th:if="${#lists.isEmpty(groupTeams[groupKey])}">
-                                <td colspan="8" class="text-center">Chưa có dữ liệu đội bóng trong bảng này</td>
-                            </tr>
-                            <tr th:each="t, iter : ${groupTeams[groupKey]}" th:classappend="${iter.index < 2 ? 'rank-top' : ''}">
-                                <td class="rank-cell" th:text="${iter.count}">1</td>
-                                <td class="team-cell">
-                                    <div class="team-logo-standing">
-                                        <img th:if="${t.logoUrl != null and !#strings.isEmpty(t.logoUrl)}" th:src="${t.logoUrl}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
-                                        <svg th:unless="${t.logoUrl != null and !#strings.isEmpty(t.logoUrl)}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px;">
-                                            <circle cx="18" cy="18" r="18" fill="#eee"/>
-                                            <text x="18" y="23" text-anchor="middle" font-size="14" font-weight="bold" fill="#999" th:text="${#strings.substring(t.name, 0, 1).toUpperCase()}">T</text>
-                                        </svg>
-                                    </div>
-                                    <span th:text="${t.name}">FC Test 173771</span>
-                                </td>
-                                <td th:text="${t.played}">2</td>
-                                <td th:text="${t.won}">1</td>
-                                <td th:text="${t.drawn}">0</td>
-                                <td th:text="${t.lost}">1</td>
-                                <td th:text="${t.goalDiff > 0 ? ('+' + t.goalDiff) : t.goalDiff}">-1</td>
-                                <td class="pts-cell" th:text="${t.points}">3</td>
-                            </tr>
+                        <tr th:if="${groupTeams == null or groupTeams['A'] == null or #lists.isEmpty(groupTeams['A'])}">
+                            <td colspan="7" class="text-center">Chưa có dữ liệu đội bóng trong bảng này</td>
+                        </tr>
+                        <tr th:each="t, iter : ${groupTeams['A']}">
+                            <td th:text="${iter.count}">1</td>
+                            <td th:text="${t.name}">Đội</td>
+                            <td th:text="${t.memberCount} ?: '-'">10</td>
+                            <td th:text="${t.points}">0</td>
+                            <td th:text="${t.goalsFor} ?: 0">0</td>
+                            <td th:text="${t.goalsAgainst} ?: 0">0</td>
+                            <td th:text="${t.goalDiff > 0 ? ('+' + t.goalDiff) : t.goalDiff}">0</td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="group-standing-container" style="flex: 1 1 calc(50% - 15px); min-width: 400px; box-sizing: border-box;" th:with="groupKey='B'">
+            <div class="group-standing-container" style="flex: 1 1 calc(50% - 15px); min-width: 400px; box-sizing: border-box;">
                 <h3 class="group-title" style="margin-bottom: 15px; font-weight: 600; color: #171717;">Bảng B</h3>
-                <div class="standing-table-container">
+                <!-- bảng cũ đã bỏ -->
+                <div class="standing-table-container" style="margin-top: 16px;">
                     <table class="standing-table">
                         <thead>
                         <tr>
-                            <th style="width: 5%;">#</th>
-                            <th>CLB</th>
-                            <th style="width: 5%;">Tr</th>
-                            <th style="width: 5%;">T</th>
-                            <th style="width: 5%;">H</th>
-                            <th style="width: 5%;">B</th>
-                            <th style="width: 8%;">HS</th>
-                            <th style="width: 8%;">Đ</th>
+                            <th style="width: 6%;">STT</th>
+                            <th>Đội</th>
+                            <th style="width: 10%;">Thành viên</th>
+                            <th style="width: 10%;">Điểm</th>
+                            <th style="width: 10%;">BT</th>
+                            <th style="width: 10%;">BB</th>
+                            <th style="width: 10%;">HS</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${#lists.isEmpty(groupTeams[groupKey])}">
-                            <td colspan="8" class="text-center">Chưa có dữ liệu đội bóng trong bảng này</td>
+                        <tr th:if="${groupTeams == null or groupTeams['B'] == null or #lists.isEmpty(groupTeams['B'])}">
+                            <td colspan="7" class="text-center">Chưa có dữ liệu đội bóng trong bảng này</td>
                         </tr>
-                        <tr th:each="t, iter : ${groupTeams[groupKey]}" th:classappend="${iter.index < 2 ? 'rank-top' : ''}">
-                            <td class="rank-cell" th:text="${iter.count}">1</td>
-                            <td class="team-cell">
-                                <div class="team-logo-standing">
-                                    <img th:if="${t.logoUrl != null and !#strings.isEmpty(t.logoUrl)}" th:src="${t.logoUrl}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
-                                    <svg th:unless="${t.logoUrl != null and !#strings.isEmpty(t.logoUrl)}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px;">
-                                        <circle cx="18" cy="18" r="18" fill="#eee"/>
-                                        <text x="18" y="23" text-anchor="middle" font-size="14" font-weight="bold" fill="#999" th:text="${#strings.substring(t.name, 0, 1).toUpperCase()}">T</text>
-                                    </svg>
-                                </div>
-                                <span th:text="${t.name}">FC Test</span>
-                            </td>
-                            <td th:text="${t.played}">0</td>
-                            <td th:text="${t.won}">0</td>
-                            <td th:text="${t.drawn}">0</td>
-                            <td th:text="${t.lost}">0</td>
+                        <tr th:each="t, iter : ${groupTeams['B']}">
+                            <td th:text="${iter.count}">1</td>
+                            <td th:text="${t.name}">Đội</td>
+                            <td th:text="${t.memberCount} ?: '-'">10</td>
+                            <td th:text="${t.points}">0</td>
+                            <td th:text="${t.goalsFor} ?: 0">0</td>
+                            <td th:text="${t.goalsAgainst} ?: 0">0</td>
                             <td th:text="${t.goalDiff > 0 ? ('+' + t.goalDiff) : t.goalDiff}">0</td>
-                            <td class="pts-cell" th:text="${t.points}">0</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="group-standing-container" style="flex: 1 1 calc(50% - 15px); min-width: 400px; box-sizing: border-box;" th:with="groupKey='C'">
+            <div class="group-standing-container" style="flex: 1 1 calc(50% - 15px); min-width: 400px; box-sizing: border-box;">
                 <h3 class="group-title" style="margin-bottom: 15px; font-weight: 600; color: #171717;">Bảng C</h3>
-                <div class="standing-table-container">
+                <!-- bảng cũ đã bỏ -->
+                <div class="standing-table-container" style="margin-top: 16px;">
                     <table class="standing-table">
                         <thead>
                         <tr>
-                            <th style="width: 5%;">#</th>
-                            <th>CLB</th>
-                            <th style="width: 5%;">Tr</th>
-                            <th style="width: 5%;">T</th>
-                            <th style="width: 5%;">H</th>
-                            <th style="width: 5%;">B</th>
-                            <th style="width: 8%;">HS</th>
-                            <th style="width: 8%;">Đ</th>
+                            <th style="width: 6%;">STT</th>
+                            <th>Đội</th>
+                            <th style="width: 10%;">Thành viên</th>
+                            <th style="width: 10%;">Điểm</th>
+                            <th style="width: 10%;">BT</th>
+                            <th style="width: 10%;">BB</th>
+                            <th style="width: 10%;">HS</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${#lists.isEmpty(groupTeams[groupKey])}">
-                            <td colspan="8" class="text-center">Chưa có dữ liệu đội bóng trong bảng này</td>
+                        <tr th:if="${groupTeams == null or groupTeams['C'] == null or #lists.isEmpty(groupTeams['C'])}">
+                            <td colspan="7" class="text-center">Chưa có dữ liệu đội bóng trong bảng này</td>
                         </tr>
-                        <tr th:each="t, iter : ${groupTeams[groupKey]}" th:classappend="${iter.index < 2 ? 'rank-top' : ''}">
-                            <td class="rank-cell" th:text="${iter.count}">1</td>
-                            <td class="team-cell">
-                                <div class="team-logo-standing">
-                                    <img th:if="${t.logoUrl != null and !#strings.isEmpty(t.logoUrl)}" th:src="${t.logoUrl}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
-                                    <svg th:unless="${t.logoUrl != null and !#strings.isEmpty(t.logoUrl)}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px;">
-                                        <circle cx="18" cy="18" r="18" fill="#eee"/>
-                                        <text x="18" y="23" text-anchor="middle" font-size="14" font-weight="bold" fill="#999" th:text="${#strings.substring(t.name, 0, 1).toUpperCase()}">T</text>
-                                    </svg>
-                                </div>
-                                <span th:text="${t.name}">FC Test</span>
-                            </td>
-                            <td th:text="${t.played}">0</td>
-                            <td th:text="${t.won}">0</td>
-                            <td th:text="${t.drawn}">0</td>
-                            <td th:text="${t.lost}">0</td>
+                        <tr th:each="t, iter : ${groupTeams['C']}">
+                            <td th:text="${iter.count}">1</td>
+                            <td th:text="${t.name}">Đội</td>
+                            <td th:text="${t.memberCount} ?: '-'">10</td>
+                            <td th:text="${t.points}">0</td>
+                            <td th:text="${t.goalsFor} ?: 0">0</td>
+                            <td th:text="${t.goalsAgainst} ?: 0">0</td>
                             <td th:text="${t.goalDiff > 0 ? ('+' + t.goalDiff) : t.goalDiff}">0</td>
-                            <td class="pts-cell" th:text="${t.points}">0</td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="group-standing-container" style="flex: 1 1 calc(50% - 15px); min-width: 400px; box-sizing: border-box;" th:with="groupKey='D'">
+            <div class="group-standing-container" style="flex: 1 1 calc(50% - 15px); min-width: 400px; box-sizing: border-box;">
                 <h3 class="group-title" style="margin-bottom: 15px; font-weight: 600; color: #171717;">Bảng D</h3>
-                <div class="standing-table-container">
+                <!-- bảng cũ đã bỏ -->
+                <div class="standing-table-container" style="margin-top: 16px;">
                     <table class="standing-table">
                         <thead>
                         <tr>
-                            <th style="width: 5%;">#</th>
-                            <th>CLB</th>
-                            <th style="width: 5%;">Tr</th>
-                            <th style="width: 5%;">T</th>
-                            <th style="width: 5%;">H</th>
-                            <th style="width: 5%;">B</th>
-                            <th style="width: 8%;">HS</th>
-                            <th style="width: 8%;">Đ</th>
+                            <th style="width: 6%;">STT</th>
+                            <th>Đội</th>
+                            <th style="width: 10%;">Thành viên</th>
+                            <th style="width: 10%;">Điểm</th>
+                            <th style="width: 10%;">BT</th>
+                            <th style="width: 10%;">BB</th>
+                            <th style="width: 10%;">HS</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:if="${#lists.isEmpty(groupTeams[groupKey])}">
-                            <td colspan="8" class="text-center">Chưa có dữ liệu đội bóng trong bảng này</td>
+                        <tr th:if="${groupTeams == null or groupTeams['D'] == null or #lists.isEmpty(groupTeams['D'])}">
+                            <td colspan="7" class="text-center">Chưa có dữ liệu đội bóng trong bảng này</td>
                         </tr>
-                        <tr th:each="t, iter : ${groupTeams[groupKey]}" th:classappend="${iter.index < 2 ? 'rank-top' : ''}">
-                            <td class="rank-cell" th:text="${iter.count}">1</td>
-                            <td class="team-cell">
-                                <div class="team-logo-standing">
-                                    <img th:if="${t.logoUrl != null and !#strings.isEmpty(t.logoUrl)}" th:src="${t.logoUrl}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
-                                    <svg th:unless="${t.logoUrl != null and !#strings.isEmpty(t.logoUrl)}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px;">
-                                        <circle cx="18" cy="18" r="18" fill="#eee"/>
-                                        <text x="18" y="23" text-anchor="middle" font-size="14" font-weight="bold" fill="#999" th:text="${#strings.substring(t.name, 0, 1).toUpperCase()}">T</text>
-                                    </svg>
-                                </div>
-                                <span th:text="${t.name}">FC Test</span>
-                            </td>
-                            <td th:text="${t.played}">0</td>
-                            <td th:text="${t.won}">0</td>
-                            <td th:text="${t.drawn}">0</td>
-                            <td th:text="${t.lost}">0</td>
+                        <tr th:each="t, iter : ${groupTeams['D']}">
+                            <td th:text="${iter.count}">1</td>
+                            <td th:text="${t.name}">Đội</td>
+                            <td th:text="${t.memberCount} ?: '-'">10</td>
+                            <td th:text="${t.points}">0</td>
+                            <td th:text="${t.goalsFor} ?: 0">0</td>
+                            <td th:text="${t.goalsAgainst} ?: 0">0</td>
                             <td th:text="${t.goalDiff > 0 ? ('+' + t.goalDiff) : t.goalDiff}">0</td>
-                            <td class="pts-cell" th:text="${t.points}">0</td>
                         </tr>
                         </tbody>
                     </table>
