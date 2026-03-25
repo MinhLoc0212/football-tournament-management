@@ -23,9 +23,45 @@
             </details>
         </div>
 
+        <div th:if="${charts != null and charts.teamId != null}" style="display:flex; flex-wrap:wrap; gap: 10px; margin-bottom: 14px;">
+            <div style="flex: 1 1 160px; min-width: 160px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.05);">
+                <div class="muted" style="font-size: 12px; font-weight: 700;">Thắng</div>
+                <div style="font-weight: 900; font-size: 18px; color:#16a34a;" th:text="${charts.win}">0</div>
+            </div>
+            <div style="flex: 1 1 160px; min-width: 160px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.05);">
+                <div class="muted" style="font-size: 12px; font-weight: 700;">Hòa</div>
+                <div style="font-weight: 900; font-size: 18px; color:#ca8a04;" th:text="${charts.draw}">0</div>
+            </div>
+            <div style="flex: 1 1 160px; min-width: 160px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.05);">
+                <div class="muted" style="font-size: 12px; font-weight: 700;">Thua</div>
+                <div style="font-weight: 900; font-size: 18px; color:#dc2626;" th:text="${charts.loss}">0</div>
+            </div>
+            <div style="flex: 1 1 160px; min-width: 160px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.05);">
+                <div class="muted" style="font-size: 12px; font-weight: 700;">Trận có tỉ số</div>
+                <div style="font-weight: 900; font-size: 18px;" th:text="${charts.matchLabels != null ? #lists.size(charts.matchLabels) : 0}">0</div>
+            </div>
+            <div style="flex: 1 1 160px; min-width: 160px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.05);">
+                <div class="muted" style="font-size: 12px; font-weight: 700;">Tổng BT</div>
+                <div style="font-weight: 900; font-size: 18px;" th:text="${charts.goalsForByMatch != null ? #aggregates.sum(charts.goalsForByMatch) : 0}">0</div>
+            </div>
+        </div>
+
         <div class="charts-grid">
             <div class="chart-card">
-                <h3 class="chart-card-title">Tỉ lệ thắng / hòa / thua</h3>
+                <div style="display:flex; align-items:flex-end; justify-content:space-between; gap: 12px; margin-bottom: 12px;">
+                    <h3 class="chart-card-title" style="margin:0;">Tỉ lệ thắng / hòa / thua</h3>
+                    <div style="display:flex; gap: 8px; flex-wrap:wrap;">
+                        <span style="display:inline-flex; align-items:center; gap: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.08); background:#fff; font-weight:800; font-size: 12px;">
+                            <span style="width:10px; height:10px; border-radius:999px; background:#22c55e;"></span> Thắng
+                        </span>
+                        <span style="display:inline-flex; align-items:center; gap: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.08); background:#fff; font-weight:800; font-size: 12px;">
+                            <span style="width:10px; height:10px; border-radius:999px; background:#facc15;"></span> Hòa
+                        </span>
+                        <span style="display:inline-flex; align-items:center; gap: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.08); background:#fff; font-weight:800; font-size: 12px;">
+                            <span style="width:10px; height:10px; border-radius:999px; background:#ef4444;"></span> Thua
+                        </span>
+                    </div>
+                </div>
                 <div class="chart-container">
                     <canvas id="wdlPieChart"></canvas>
                 </div>
@@ -33,9 +69,14 @@
             </div>
 
             <div class="chart-card">
-                <h3 class="chart-card-title">Bàn thắng theo từng trận</h3>
-                <div class="chart-container">
-                    <canvas id="goalsPerMatchBarChart"></canvas>
+                <div style="display:flex; align-items:flex-end; justify-content:space-between; gap: 12px; margin-bottom: 12px;">
+                    <h3 class="chart-card-title" style="margin:0;">Bàn thắng theo từng trận</h3>
+                    <div class="muted" style="font-size: 12px;">Kéo ngang để xem đầy đủ nhãn</div>
+                </div>
+                <div style="overflow-x:auto; padding-bottom: 6px;">
+                    <div class="chart-container" style="min-width: 680px;">
+                        <canvas id="goalsPerMatchBarChart"></canvas>
+                    </div>
                 </div>
                 <div id="goalsEmptyState" class="muted" style="margin-top: 10px;" hidden>Chưa có dữ liệu bàn thắng theo trận cho đội này.</div>
             </div>
